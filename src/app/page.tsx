@@ -229,7 +229,7 @@ export default async function Home({ searchParams }: HomeProps) {
         {/* Details */}
         <div className="relative">
           {sideAt(0) && (
-            <SidePhoto src={sideAt(0)!} side="left" depth={0.58} tilt={-6} />
+            <SidePhoto src={sideAt(0)!} side="left" tilt={-6} />
           )}
           <section id="details" className="scroll-mt-8 py-14">
             <Reveal>
@@ -353,7 +353,7 @@ export default async function Home({ searchParams }: HomeProps) {
         {/* Playlist */}
         <div className="relative">
           {sideAt(1) && (
-            <SidePhoto src={sideAt(1)!} side="right" depth={0.72} tilt={5} />
+            <SidePhoto src={sideAt(1)!} side="right" tilt={5} />
           )}
           <section id="playlist" className="scroll-mt-8 py-14">
             <Reveal>
@@ -380,7 +380,7 @@ export default async function Home({ searchParams }: HomeProps) {
           <>
             <div className="relative">
               {sideAt(2) && (
-                <SidePhoto src={sideAt(2)!} side="left" depth={0.66} tilt={-4} />
+                <SidePhoto src={sideAt(2)!} side="left" tilt={-4} />
               )}
               <Parallax speed={0.35} aria-hidden className="pointer-events-none absolute -right-10 top-0 hidden lg:block">
                 <GlowDot className="h-36 w-36" />

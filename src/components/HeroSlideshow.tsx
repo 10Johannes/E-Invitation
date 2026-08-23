@@ -108,17 +108,27 @@ export default function HeroSlideshow({ photos }: HeroSlideshowProps) {
               repeatType: "mirror",
             }}
           >
+            {/* Portrait slides show the WHOLE photo: blurred self-backdrop
+                plus an uncropped contain layer — no more slicing faces off. */}
+            {portraitSlide && (
+              <Image
+                src={current.url}
+                alt=""
+                fill
+                aria-hidden
+                sizes="100vw"
+                className="scale-125 object-cover opacity-90 blur-2xl"
+              />
+            )}
             <Image
               src={current.url}
               alt=""
               fill
               priority={index === 0}
               sizes="100vw"
-              className={`object-cover ${
-                portraitSlide ? "object-[50%_25%]" : ""
-              }`}
-              // Portrait photos get an upper-third focal bias so faces stay
-              // in frame on wide, landscape hero crops.
+              className={
+                portraitSlide ? "object-contain" : "object-cover"
+              }
               onLoad={(event) => {
                 const img = event.currentTarget;
                 if (img.naturalWidth > 0) {
