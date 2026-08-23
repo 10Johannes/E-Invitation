@@ -98,8 +98,21 @@ export default function HeroSlideshow({ photos }: HeroSlideshowProps) {
           exit={{ opacity: 0 }}
           transition={{ duration: reduceMotion ? 0 : 1.4, ease: "easeInOut" }}
         >
+          {/* Portrait backdrops stay OUTSIDE the zoom layer: animating a
+              blurred full-screen image forces a repaint every frame. Static
+              here + GPU-composited zoom below keeps it smooth. */}
+          {portraitSlide && (
+            <Image
+              src={current.url}
+              alt=""
+              fill
+              aria-hidden
+              sizes="100vw"
+              className="scale-125 object-cover opacity-90 blur-xl"
+            />
+          )}
           <motion.div
-            className="relative h-full w-full"
+            className="relative h-full w-full transform-gpu will-change-transform"
             animate={reduceMotion ? undefined : { scale: [1.04, 1.14] }}
             transition={{
               duration: SLIDE_INTERVAL_MS / 1000 + 3,
@@ -108,18 +121,6 @@ export default function HeroSlideshow({ photos }: HeroSlideshowProps) {
               repeatType: "mirror",
             }}
           >
-            {/* Portrait slides show the WHOLE photo: blurred self-backdrop
-                plus an uncropped contain layer — no more slicing faces off. */}
-            {portraitSlide && (
-              <Image
-                src={current.url}
-                alt=""
-                fill
-                aria-hidden
-                sizes="100vw"
-                className="scale-125 object-cover opacity-90 blur-2xl"
-              />
-            )}
             <Image
               src={current.url}
               alt=""

@@ -379,8 +379,8 @@ export default async function Home({ searchParams }: HomeProps) {
         {galleryOpen && (
           <>
             <div className="relative">
-              {sideAt(2) && (
-                <SidePhoto src={sideAt(2)!} side="left" tilt={-4} />
+              {sideAt(3) && (
+                <SidePhoto src={sideAt(3)!} side="left" tilt={-4} />
               )}
               <Parallax speed={0.35} aria-hidden className="pointer-events-none absolute -right-10 top-0 hidden lg:block">
                 <GlowDot className="h-36 w-36" />
@@ -418,6 +418,9 @@ export default async function Home({ searchParams }: HomeProps) {
 
         {/* RSVP + Wishes */}
         <div className="relative">
+          {sideAt(2) && (
+            <SidePhoto src={sideAt(2)!} side="left" tilt={4} />
+          )}
           <section id="rsvp" className="scroll-mt-8 py-14">
             <Reveal>
               <h2 className="mb-2 text-center font-serif text-4xl italic text-gradient">

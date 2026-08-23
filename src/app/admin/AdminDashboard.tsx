@@ -836,7 +836,7 @@ function PhotosTab({
       <h2 className="font-serif text-2xl italic text-wine">Couple photos</h2>
       <p className="mt-1 text-sm text-charcoal/70">
         These power the hero slideshow. Tick “float beside” to also float them
-        along the page edges (up to three are used).
+        along the page edges (up to four are used).
       </p>
 
       {!cloudinaryReady && (
