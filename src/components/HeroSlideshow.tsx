@@ -17,7 +17,16 @@ export default function HeroSlideshow({ photos }: HeroSlideshowProps) {
   const reduceMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [active, setActive] = useState(false);
+  const [portraitSlide, setPortraitSlide] = useState(false);
   const touchStartX = useRef<number | null>(null);
+
+  // Reset the focal bias whenever the visible slide changes.
+  const currentSlideId = photos[index]?.id;
+  const [trackedSlideId, setTrackedSlideId] = useState(currentSlideId);
+  if (currentSlideId !== trackedSlideId) {
+    setTrackedSlideId(currentSlideId);
+    setPortraitSlide(false);
+  }
 
   useEffect(() => {
     function onOpen() {
@@ -105,7 +114,17 @@ export default function HeroSlideshow({ photos }: HeroSlideshowProps) {
               fill
               priority={index === 0}
               sizes="100vw"
-              className="object-cover"
+              className={`object-cover ${
+                portraitSlide ? "object-[50%_25%]" : ""
+              }`}
+              // Portrait photos get an upper-third focal bias so faces stay
+              // in frame on wide, landscape hero crops.
+              onLoad={(event) => {
+                const img = event.currentTarget;
+                if (img.naturalWidth > 0) {
+                  setPortraitSlide(img.naturalHeight > img.naturalWidth * 1.05);
+                }
+              }}
             />
           </motion.div>
         </motion.div>

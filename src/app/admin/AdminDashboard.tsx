@@ -900,13 +900,13 @@ function PhotosTab({
         <ul className="mt-7 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {photoViews.map((photo, index) => (
             <li key={photo.id} className="overflow-hidden rounded-2xl border border-charcoal/10 bg-white/40">
-              <div className="relative aspect-square">
+              <div className="relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={photo.thumbUrl}
                   alt=""
                   loading="lazy"
-                  className="h-full w-full object-cover"
+                  className="w-full"
                 />
                 <span className="absolute left-2 top-2 rounded-full bg-black/45 px-2 py-0.5 text-[0.6rem] font-medium uppercase tracking-widest text-white">
                   #{index + 1}
