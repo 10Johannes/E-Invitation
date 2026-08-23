@@ -9,13 +9,19 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "browser-image-compression": "^2.0.2",
+    "cloudinary": "^2.10.1",
+    "framer-motion": "^13.1.1",
     "next": "16.3.1",
+    "qrcode": "^1.5.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "yet-another-react-lightbox": "^3.32.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

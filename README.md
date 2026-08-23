@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# E-Invitation — Censmar & Eduardo
 
-## Getting Started
+A wedding e-invitation with six switchable themes (living gradients included), a couple-photo hero slideshow, parallax botanical vines, a vinyl-style Spotify player, guest photo sharing via QR code, and a printable A6 table postcard.
 
-First, run the development server:
+Built with Next.js (App Router) + TypeScript + Tailwind CSS v4 + framer-motion. Photos are stored in Cloudinary; settings live in Upstash Redis (or a local JSON file) — no traditional database required.
+
+## Features
+
+- **Invitation page** (`/`)
+  - "Open Invitation" cover gate (personalized via `?to=Guest+Name`), Ken Burns hero slideshow of the couple's photos
+  - Scroll-driven parallax: gradient orbs, floating polaroid side-photos, interactive green vines that grow as guests scroll and bloom flowers on tap
+  - Countdown, church/ceremony + reception cards with Maps links, vinyl-record music player
+  - Live guest-photo gallery with lightbox
+- **Guest uploads** (`/upload`) — QR-code target: event passcode gate, optional guest name, client-side compression
+- **QR postcard** (`/qr`) — print-perfect A6 landscape table card in the active theme
+- **Admin panel** (`/admin`) — passcode-protected:
+  - **Theme** — six palettes applied site-wide instantly (Dusty Pink, Sage & Cream, Navy & Gold, Terracotta, Lavender Mist, Classic Ivory)
+  - **Content** — bride/groom names (first + full), date/time & timezone label, church, reception venue, events, Spotify playlist URL
+  - **Photos** — upload/delete/reorder hero photos; tick “Beside story” to also float them along the page edges
+- **Safeguards** — HMAC-signed admin session cookie, per-IP rate limiting on login/uploads, MIME/size validation
+
+## Setup
 
 ```bash
+npm install
+cp .env.example .env.local   # fill in the values
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `ADMIN_PASSCODE` | for `/admin` | Passcode for the admin panel — pick something strong |
+| `CLOUDINARY_CLOUD_NAME` | for uploads/photos | Cloudinary account name |
+| `CLOUDINARY_API_KEY` | for uploads/photos | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | for uploads/photos | Cloudinary API secret |
+| `EVENT_PASSCODE` | for uploads | Code guests must enter on `/upload` |
+| `UPSTASH_REDIS_REST_URL` | recommended on Vercel | Settings storage (free tier works) |
+| `UPSTASH_REDIS_REST_TOKEN` | recommended on Vercel | Upstash REST token |
+| `NEXT_PUBLIC_SITE_URL` | recommended in prod | Absolute URL used for OG tags |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Without Cloudinary the site runs fine — uploads show a friendly notice and the hero falls back to the gradient. Without Upstash, settings persist to `.data/settings.json` (great locally; not persistent on serverless).
 
-## Learn More
+### Cloudinary setup
 
-To learn more about Next.js, take a look at the following resources:
+1. Free account at [console.cloudinary.com](https://console.cloudinary.com)
+2. Dashboard → Settings → API Keys → copy the three values into `.env.local`
+3. Couple photos → `wedding/couple` folder (tagged `couple-hero`); guest photos → `wedding/gallery` (tagged `wedding-gallery`, uploader name kept as context metadata)
+4. Moderate/delete: Media Library → filter by tag
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Upstash setup (for Vercel)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Free account at [console.upstash.com](https://console.upstash.com) → create a **Regional** database (pick the region nearest your Vercel region)
+2. Open the database → **REST API** section → copy the URL and token into `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
 
-## Deploy on Vercel
+## Customizing everything at `/admin`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+All content is edited live from the admin panel — names, date/time (any format parseable as an ISO date string, e.g. `2026-10-10T14:00:00+08:00`), event times, venues, Maps links, playlist. The seeded defaults come from `src/config/wedding.ts`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Spotify: your playlist → Share → Copy link → paste into the admin Content tab.
+
+## Printing the QR postcard
+
+1. Open `/qr` (QR always encodes the current domain)
+2. Print → set paper to **A6 / 148×105 mm**, enable **background graphics**, margins **none**
+3. **Print only after your final domain is live** — printed codes are frozen images
+
+## Deploying to Vercel
+
+1. Push to GitHub and import in Vercel
+2. Add all environment variables (including Upstash + admin passcode)
+3. Redeploy, then open `/admin`, pick your theme, upload couple photos, edit content
+
+## Running with Docker
+
+```bash
+docker compose up -d          # build + serve on http://localhost:3000
+docker compose logs -f web    # tail logs
+docker compose down           # stop
+```
+
+Settings persist across rebuilds via the `wedding-settings` volume mounted at `/app/.data`. Environment variables are read from your shell or a project-root `.env` file.
+
+## Notes
+
+- Spotify embeds play 30-second previews for visitors not logged in (platform limitation); full playback needs a free Spotify account
+- The gallery list is cached 60 s to respect Cloudinary Admin API rate limits
+- Parallax/vines/blossoms respect `prefers-reduced-motion`

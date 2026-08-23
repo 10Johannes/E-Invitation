@@ -1,0 +1,24 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      # Defaults for local testing; override via host env or .env
+      EVENT_PASSCODE: ${EVENT_PASSCODE:-censmar-eduardo2026}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+      # Admin panel passcode (required to use /admin)
+      ADMIN_PASSCODE: ${ADMIN_PASSCODE:-}
+      # Optional: use Upstash Redis instead of the local settings file (recommended on Vercel)
+      UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL:-}
+      UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN:-}
+    volumes:
+      # Persists admin settings (theme, content, photo order) across container rebuilds
+      - wedding-settings:/app/.data
+    restart: unless-stopped
+
+volumes:
+  wedding-settings:
