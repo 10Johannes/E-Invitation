@@ -190,6 +190,28 @@ export async function setGuestPhotosVisibilityAction(
   });
 }
 
+export async function setGuestPhotoHiddenAction(
+  id: string,
+  hidden: boolean
+): Promise<ActionResult> {
+  return runSafe(async (): Promise<ActionResult> => {
+    const cleanId = typeof id === "string" ? id.trim().slice(0, 200) : "";
+    if (!cleanId) {
+      return { ok: false, error: "That photo could not be found." };
+    }
+    const current = await getSettings();
+    const set = new Set(current.hiddenGuestPhotos);
+    if (hidden) {
+      set.add(cleanId);
+    } else {
+      set.delete(cleanId);
+    }
+    await saveSettings({ hiddenGuestPhotos: [...set] });
+    refresh();
+    return { ok: true };
+  });
+}
+
 export async function setRsvpHiddenAction(
   id: string,
   hidden: boolean

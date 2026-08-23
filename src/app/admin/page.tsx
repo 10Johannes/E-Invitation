@@ -4,6 +4,8 @@ import AdminDashboard from "./AdminDashboard";
 import type { ContentInput } from "./actions";
 import { buildPhotoViews } from "@/lib/couple-photos";
 import { cloudinaryConfigured } from "@/lib/cloudinary";
+import { getOpens } from "@/lib/opens";
+import { getPhotosUncached } from "@/lib/photos";
 import { getRsvps } from "@/lib/rsvps";
 import { getSettings } from "@/lib/store";
 
@@ -19,7 +21,12 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  const [settings, rsvps] = await Promise.all([getSettings(), getRsvps()]);
+  const [settings, rsvps, guestPhotos, opens] = await Promise.all([
+    getSettings(),
+    getRsvps(),
+    getPhotosUncached(),
+    getOpens(),
+  ]);
 
   const content: ContentInput = {
     couple: settings.couple,
@@ -49,7 +56,10 @@ export default async function AdminPage() {
       coupleFirst={settings.couple.first}
       coupleSecond={settings.couple.second}
       guestPhotosShowNow={settings.guestPhotosShowNow}
+      guestPhotos={guestPhotos}
+      hiddenGuestPhotos={settings.hiddenGuestPhotos}
       rsvps={rsvps}
+      opens={opens}
     />
   );
 }

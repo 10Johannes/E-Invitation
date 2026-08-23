@@ -44,6 +44,7 @@ export const DEFAULT_SETTINGS: Settings = {
   spotifyPlaylistUrl: "",
   uploadPasscodeHint: "the code printed at the bottom of your invitation card",
   guestPhotosShowNow: true,
+  hiddenGuestPhotos: [],
   heroPhotos: [],
   loveNote:
     "We found the one our souls love, and today we begin forever — we would be honoured to have you with us.",

@@ -8,6 +8,7 @@ export type GalleryPhoto = {
   width: number;
   height: number;
   guest?: string;
+  createdAt?: string;
 };
 
 async function fetchPhotos(): Promise<GalleryPhoto[]> {
@@ -47,6 +48,10 @@ async function fetchPhotos(): Promise<GalleryPhoto[]> {
         width: resource.width,
         height: resource.height,
         guest,
+        createdAt:
+          typeof resource.created_at === "string"
+            ? resource.created_at
+            : undefined,
       };
     });
   } catch (error) {
@@ -62,3 +67,8 @@ export const getPhotos = unstable_cache(fetchPhotos, ["wedding-gallery"], {
   revalidate: 60,
   tags: ["wedding-gallery"],
 });
+
+/** Fresh read for the admin panel — bypasses the 60s cache. */
+export async function getPhotosUncached(): Promise<GalleryPhoto[]> {
+  return fetchPhotos();
+}

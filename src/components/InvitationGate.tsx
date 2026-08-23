@@ -47,6 +47,18 @@ export default function InvitationGate({
 
   function handleOpen() {
     markInviteOpened();
+    if (guestName) {
+      try {
+        void fetch("/api/open", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: guestName }),
+          keepalive: true,
+        });
+      } catch {
+        // Tracking is best-effort only.
+      }
+    }
     document.documentElement.style.overflow = "";
     setOpen(true);
     window.dispatchEvent(new Event("invite:open"));

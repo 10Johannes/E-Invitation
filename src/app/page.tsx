@@ -112,9 +112,13 @@ export default async function Home({ searchParams }: HomeProps) {
   const { couple, venue, events } = settings;
   const showEntourage = settings.entourage.some((g) => g.names.length > 0);
   const eventStarted = isEventStarted(settings.dateISO);
+  const hiddenPhotoIds = new Set(settings.hiddenGuestPhotos);
+  const visibleGuestPhotos = guestPhotos.filter(
+    (photo) => !hiddenPhotoIds.has(photo.id)
+  );
   const galleryOpen =
     eventStarted ||
-    (settings.guestPhotosShowNow && guestPhotos.length > 0);
+    (settings.guestPhotosShowNow && visibleGuestPhotos.length > 0);
 
   return (
     <ScrollDepthProvider>
@@ -391,8 +395,8 @@ export default async function Home({ searchParams }: HomeProps) {
                   </p>
                 </Reveal>
 
-                {guestPhotos.length > 0 ? (
-                  <Gallery photos={guestPhotos} />
+                {visibleGuestPhotos.length > 0 ? (
+                  <Gallery photos={visibleGuestPhotos} />
                 ) : (
                   <Reveal delay={0.1}>
                     <div className="glass rounded-3xl p-10 text-center">

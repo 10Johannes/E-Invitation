@@ -41,6 +41,7 @@ export type Settings = {
   spotifyPlaylistUrl: string;
   uploadPasscodeHint: string;
   guestPhotosShowNow: boolean;
+  hiddenGuestPhotos: string[];
   heroPhotos: CouplePhoto[];
   loveNote: string;
   dressCode: string;

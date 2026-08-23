@@ -7,6 +7,7 @@ import {
   removePhotoAction,
   reorderPhotosAction,
   saveContentAction,
+  setGuestPhotoHiddenAction,
   setGuestPhotosVisibilityAction,
   setRsvpHiddenAction,
   setThemeAction,
@@ -15,12 +16,14 @@ import {
   type ContentInput,
 } from "./actions";
 import type { PhotoView } from "@/lib/couple-photos";
+import type { OpenEntry } from "@/lib/opens";
+import type { GalleryPhoto } from "@/lib/photos";
 import type { RsvpEntry } from "@/lib/rsvps";
 import type { WeddingEvent } from "@/lib/settings";
 import { formatShortDate } from "@/config/wedding";
 import { THEMES, type ThemeId } from "@/lib/themes";
 
-type Tab = "theme" | "content" | "photos" | "rsvp";
+type Tab = "theme" | "content" | "photos" | "gallery" | "rsvp";
 
 type AdminDashboardProps = {
   theme: ThemeId;
@@ -30,13 +33,17 @@ type AdminDashboardProps = {
   coupleFirst: string;
   coupleSecond: string;
   guestPhotosShowNow: boolean;
+  guestPhotos: GalleryPhoto[];
+  hiddenGuestPhotos: string[];
   rsvps: RsvpEntry[];
+  opens: OpenEntry[];
 };
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "theme", label: "Theme" },
   { id: "content", label: "Content" },
   { id: "photos", label: "Photos" },
+  { id: "gallery", label: "Gallery" },
   { id: "rsvp", label: "RSVP" },
 ];
 
@@ -51,7 +58,10 @@ export default function AdminDashboard({
   coupleFirst,
   coupleSecond,
   guestPhotosShowNow,
+  guestPhotos,
+  hiddenGuestPhotos,
   rsvps,
+  opens,
 }: AdminDashboardProps) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("theme");
@@ -147,7 +157,16 @@ export default function AdminDashboard({
           onDone={flash}
         />
       )}
-      {tab === "rsvp" && <RsvpTab rsvps={rsvps} onDone={flash} />}
+      {tab === "gallery" && (
+        <GuestGalleryTab
+          photos={guestPhotos}
+          initialHidden={hiddenGuestPhotos}
+          onDone={flash}
+        />
+      )}
+      {tab === "rsvp" && (
+        <RsvpTab rsvps={rsvps} opens={opens} onDone={flash} />
+      )}
     </main>
   );
 }
@@ -906,11 +925,135 @@ function PhotosTab({
   );
 }
 
+function GuestGalleryTab({
+  photos,
+  initialHidden,
+  onDone,
+}: {
+  photos: GalleryPhoto[];
+  initialHidden: string[];
+  onDone: (msg: string) => void;
+}) {
+  const [hiddenIds, setHiddenIds] = useState<string[]>(initialHidden);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function toggle(photo: GalleryPhoto) {
+    if (busyId) return;
+    const hide = !hiddenIds.includes(photo.id);
+    setBusyId(photo.id);
+    const previous = hiddenIds;
+    setHiddenIds((ids) =>
+      hide ? [...ids, photo.id] : ids.filter((id) => id !== photo.id)
+    );
+    try {
+      const result = await setGuestPhotoHiddenAction(photo.id, hide);
+      if (result.ok) {
+        onDone(
+          hide
+            ? "Photo hidden from the public gallery."
+            : "Photo is visible in the gallery again."
+        );
+      } else {
+        setHiddenIds(previous);
+        onDone(result.error);
+      }
+    } catch {
+      setHiddenIds(previous);
+      onDone("Could not update that photo. Please try again.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const hiddenCount = photos.filter((p) => hiddenIds.includes(p.id)).length;
+
+  return (
+    <section className="glass rounded-3xl p-6 sm:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-serif text-2xl italic text-wine">Guest gallery</h2>
+        {photos.length > 0 && (
+          <div className="flex gap-2 text-xs">
+            <span className="rounded-full bg-charcoal/10 px-3 py-1 uppercase tracking-widest text-charcoal">
+              {photos.length} {photos.length === 1 ? "photo" : "photos"}
+            </span>
+            {hiddenCount > 0 && (
+              <span className="rounded-full bg-charcoal/10 px-3 py-1 uppercase tracking-widest text-charcoal/60">
+                {hiddenCount} hidden
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+      <p className="mt-1 text-sm text-charcoal/70">
+        Hiding a photo removes it from the public site only — nothing is ever
+        deleted, so this is always reversible.
+      </p>
+
+      {photos.length === 0 ? (
+        <p className="mt-7 rounded-2xl border border-dashed border-dusty bg-charcoal/[0.03] px-4 py-10 text-center text-sm text-charcoal/60">
+          No guest photos yet — uploads appear here as they arrive.
+        </p>
+      ) : (
+        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {photos.map((photo) => {
+            const hidden = hiddenIds.includes(photo.id);
+            return (
+              <li
+                key={photo.id}
+                className={`overflow-hidden rounded-2xl border bg-charcoal/[0.04] transition ${
+                  hidden
+                    ? "border-charcoal/10 opacity-60"
+                    : "border-charcoal/10"
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo.thumbUrl}
+                  alt={photo.guest ? `Photo by ${photo.guest}` : "Guest photo"}
+                  loading="lazy"
+                  className={`aspect-square w-full object-cover ${
+                    hidden ? "grayscale" : ""
+                  }`}
+                />
+                <div className="flex items-center justify-between gap-2 p-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-serif text-base italic text-charcoal">
+                      {photo.guest || "Unknown guest"}
+                    </p>
+                    {photo.createdAt && (
+                      <p className="text-xs text-charcoal/45">
+                        {new Date(photo.createdAt).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busyId === photo.id}
+                    onClick={() => toggle(photo)}
+                    className="shrink-0 rounded-full bg-charcoal/10 px-3 py-1 text-xs text-charcoal transition hover:bg-charcoal/20 disabled:opacity-40"
+                  >
+                    {hidden ? "Show" : "Hide"}
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function RsvpTab({
   rsvps,
+  opens,
   onDone,
 }: {
   rsvps: RsvpEntry[];
+  opens: OpenEntry[];
   onDone: (msg: string) => void;
 }) {
   const router = useRouter();
@@ -933,31 +1076,6 @@ function RsvpTab({
     }
   }
 
-  function exportCsv() {
-    const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
-    const rows = rsvps.map((entry) =>
-      [
-        entry.name,
-        entry.attending,
-        String(entry.guests),
-        entry.message.replace(/\r?\n/g, " "),
-        new Date(entry.createdAt).toISOString(),
-      ]
-        .map(escape)
-        .join(",")
-    );
-    const blob = new Blob(
-      [`name,attending,guests,message,submittedAt\n${rows.join("\n")}`],
-      { type: "text/csv" }
-    );
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "rsvps.csv";
-    link.click();
-    URL.revokeObjectURL(url);
-  }
-
   const attending = rsvps.filter((entry) => entry.attending === "yes");
   const seats = attending.reduce((sum, entry) => sum + entry.guests, 0);
 
@@ -966,13 +1084,13 @@ function RsvpTab({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-serif text-2xl italic text-wine">RSVP responses</h2>
         {rsvps.length > 0 && (
-          <button
-            type="button"
-            onClick={exportCsv}
+          <a
+            href="/api/admin/export"
+            download="wedding-rsvps.csv"
             className="rounded-full border border-deeprose/40 px-5 py-2 text-xs font-medium uppercase tracking-[0.15em] text-wine transition hover:bg-charcoal/5"
           >
             Export CSV
-          </button>
+          </a>
         )}
       </div>
 
@@ -1044,7 +1162,43 @@ function RsvpTab({
           ))}
         </ul>
       )}
+
+      <OpensCard opens={opens} />
     </section>
+  );
+}
+
+function OpensCard({ opens }: { opens: OpenEntry[] }) {
+  return (
+    <div className="mt-8 border-t border-charcoal/10 pt-6">
+      <h3 className="font-serif text-xl italic text-wine">Invitation opens</h3>
+      <p className="mt-1 text-xs text-charcoal/55">
+        The first time each named guest opened their invitation link, plus
+        repeat visits.
+      </p>
+      {opens.length === 0 ? (
+        <p className="mt-4 rounded-2xl border border-dashed border-dusty bg-charcoal/[0.03] px-4 py-8 text-center text-sm text-charcoal/60">
+          No opens recorded yet.
+        </p>
+      ) : (
+        <ul className="mt-4 flex flex-col gap-2">
+          {opens.map((entry) => (
+            <li
+              key={entry.name}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-charcoal/[0.04] px-4 py-2.5"
+            >
+              <span className="font-serif text-base italic text-charcoal">
+                {entry.name}
+              </span>
+              <span className="text-xs text-charcoal/55">
+                {new Date(entry.firstOpenedAt).toLocaleString()}
+                {entry.opens > 1 && ` · ${entry.opens}×`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

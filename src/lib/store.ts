@@ -79,6 +79,11 @@ function normalize(raw: Partial<Settings> | null): Settings {
       typeof raw.guestPhotosShowNow === "boolean"
         ? raw.guestPhotosShowNow
         : DEFAULT_SETTINGS.guestPhotosShowNow,
+    hiddenGuestPhotos: Array.isArray(raw.hiddenGuestPhotos)
+      ? raw.hiddenGuestPhotos.filter(
+          (id): id is string => typeof id === "string" && id.length > 0
+        )
+      : [],
     couple: { ...DEFAULT_SETTINGS.couple, ...raw.couple },
     church: { ...DEFAULT_SETTINGS.church, ...raw.church },
     venue: { ...DEFAULT_SETTINGS.venue, ...raw.venue },
