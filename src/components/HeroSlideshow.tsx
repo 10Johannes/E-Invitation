@@ -111,15 +111,12 @@ export default function HeroSlideshow({ photos }: HeroSlideshowProps) {
               className="scale-125 object-cover opacity-90 blur-xl"
             />
           )}
-          <motion.div
-            className="relative h-full w-full transform-gpu will-change-transform"
-            animate={reduceMotion ? undefined : { scale: [1.04, 1.14] }}
-            transition={{
-              duration: SLIDE_INTERVAL_MS / 1000 + 3,
-              ease: "linear",
-              repeat: Infinity,
-              repeatType: "mirror",
-            }}
+          {/* Native CSS zoom: compositor-driven, immune to main-thread
+              jank (framer-motion's per-frame style writes were the lag). */}
+          <div
+            className={`relative h-full w-full ${
+              reduceMotion ? "" : "animate-kenburns"
+            }`}
           >
             <Image
               src={current.url}
@@ -137,7 +134,7 @@ export default function HeroSlideshow({ photos }: HeroSlideshowProps) {
                 }
               }}
             />
-          </motion.div>
+          </div>
         </motion.div>
       </AnimatePresence>
 
