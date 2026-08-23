@@ -16,6 +16,7 @@ import {
   type ContentInput,
 } from "./actions";
 import type { PhotoView } from "@/lib/couple-photos";
+import { MAX_COUPLE_PHOTOS } from "@/lib/limits";
 import type { OpenEntry } from "@/lib/opens";
 import type { GalleryPhoto } from "@/lib/photos";
 import type { RsvpEntry } from "@/lib/rsvps";
@@ -716,25 +717,44 @@ function PhotosTab({
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const remainingSlots = Math.max(0, MAX_COUPLE_PHOTOS - photoViews.length);
 
   async function uploadFiles(fileList: FileList | null) {
     if (!fileList || fileList.length === 0 || busy) return;
+    if (remainingSlots === 0) {
+      setUploadError(
+        `You can keep up to ${MAX_COUPLE_PHOTOS} couple photos. Remove one first.`
+      );
+      return;
+    }
+
+    const files =
+      fileList.length > remainingSlots
+        ? Array.from(fileList).slice(0, remainingSlots)
+        : Array.from(fileList);
+
     setBusy(true);
-    setUploadError(null);
+    setUploadError(
+      files.length < fileList.length
+        ? `Only ${remainingSlots} more ${
+            remainingSlots === 1 ? "photo was" : "photos were"
+          } added — the rest would exceed the ${MAX_COUPLE_PHOTOS}-photo limit.`
+        : null
+    );
 
     try {
       const compression = (await import("browser-image-compression")).default;
       const uploadedIds: string[] = [];
 
-      for (let i = 0; i < fileList.length; i++) {
-        const raw = fileList[i];
-        setProgress(`Preparing ${i + 1} of ${fileList.length}…`);
+      for (let i = 0; i < files.length; i++) {
+        const raw = files[i];
+        setProgress(`Preparing ${i + 1} of ${files.length}…`);
         const compressed = await compression(raw, {
           maxSizeMB: 1.2,
           maxWidthOrHeight: 1800,
           useWebWorker: true,
         });
-        setProgress(`Uploading ${i + 1} of ${fileList.length}…`);
+        setProgress(`Uploading ${i + 1} of ${files.length}…`);
 
         const form = new FormData();
         form.set("file", compressed, raw.name.replace(/\.[^.]+$/, "") + ".jpg");
@@ -756,7 +776,7 @@ function PhotosTab({
       await appendPhotosAction(uploadedIds);
       onDone(
         uploadedIds.length === 1
-          ? "Photo added."
+          ? `Photo added (${photoViews.length + uploadedIds.length}/${MAX_COUPLE_PHOTOS}).`
           : `${uploadedIds.length} photos added.`
       );
       router.refresh();
@@ -837,14 +857,23 @@ function PhotosTab({
           e.target.value = "";
         }}
       />
-      <button
-        type="button"
-        disabled={!cloudinaryReady || busy}
-        onClick={() => inputRef.current?.click()}
-        className="btn-primary mt-5 rounded-full px-8 py-3 text-sm font-medium tracking-wide disabled:opacity-60"
-      >
-        {busy ? (progress ?? "Working…") : "Upload photos"}
-      </button>
+      <div className="mt-5 flex flex-wrap items-center gap-4">
+        <button
+          type="button"
+          disabled={!cloudinaryReady || busy || remainingSlots === 0}
+          onClick={() => inputRef.current?.click()}
+          className="btn-primary rounded-full px-8 py-3 text-sm font-medium tracking-wide disabled:opacity-60"
+        >
+          {busy
+            ? (progress ?? "Working…")
+            : remainingSlots === 0
+              ? "Photo limit reached"
+              : "Upload photos"}
+        </button>
+        <span className="text-xs uppercase tracking-[0.15em] text-charcoal/50">
+          {photoViews.length} / {MAX_COUPLE_PHOTOS}
+        </span>
+      </div>
 
       {uploadError && (
         <p role="alert" className="mt-3 text-sm text-deeprose">

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { isAdmin, requireAdmin } from "@/lib/auth";
+import { MAX_COUPLE_PHOTOS } from "@/lib/limits";
 import { cloudinary, cloudinaryConfigured } from "@/lib/cloudinary";
 import type { Settings, WeddingEvent } from "@/lib/settings";
 import { setRsvpHidden } from "@/lib/rsvps";
@@ -234,6 +235,12 @@ export async function appendPhotosAction(ids: string[]): Promise<ActionResult> {
     const fresh = ids
       .filter((id) => typeof id === "string" && id && !known.has(id))
       .map((id) => ({ id, showBesideStory: false }));
+    if (current.heroPhotos.length + fresh.length > MAX_COUPLE_PHOTOS) {
+      return {
+        ok: false,
+        error: `You can keep up to ${MAX_COUPLE_PHOTOS} couple photos.`,
+      };
+    }
     await saveSettings({ heroPhotos: [...current.heroPhotos, ...fresh] });
     refresh();
     return { ok: true };

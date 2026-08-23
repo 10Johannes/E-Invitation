@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { UploadApiResponse } from "cloudinary";
 import { isAdmin } from "@/lib/auth";
 import { cloudinary, cloudinaryConfigured } from "@/lib/cloudinary";
+import { MAX_COUPLE_PHOTOS } from "@/lib/limits";
+import { getSettings } from "@/lib/store";
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
@@ -14,6 +16,14 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Photo storage is not configured (missing Cloudinary keys)." },
       { status: 503 }
+    );
+  }
+
+  const currentCount = (await getSettings()).heroPhotos.length;
+  if (currentCount >= MAX_COUPLE_PHOTOS) {
+    return NextResponse.json(
+      { error: `You can keep up to ${MAX_COUPLE_PHOTOS} couple photos. Remove one first.` },
+      { status: 409 }
     );
   }
 
