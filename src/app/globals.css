@@ -17,7 +17,6 @@
   --animate-shimmer: shimmer 9s ease-in-out infinite;
   --animate-spin-slow: spin-vinyl 7s linear infinite;
   --animate-floaty: floaty 6s ease-in-out infinite alternate;
-  --animate-kenburns: kenburns 9s ease-in-out infinite alternate;
   --animate-eq: eq-bounce 1.1s ease-in-out infinite;
   --animate-marquee: marquee-scroll 46s linear infinite;
 
@@ -43,17 +42,6 @@
     }
     to {
       transform: translateY(-16px);
-    }
-  }
-
-  /* GPU-composited hero zoom: the browser drives this natively, so it stays
-     smooth even when JavaScript on the page is busy. */
-  @keyframes kenburns {
-    from {
-      transform: scale(1.045);
-    }
-    to {
-      transform: scale(1.14);
     }
   }
 

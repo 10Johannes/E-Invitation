@@ -111,30 +111,20 @@ export default function HeroSlideshow({ photos }: HeroSlideshowProps) {
               className="scale-125 object-cover opacity-90 blur-xl"
             />
           )}
-          {/* Native CSS zoom: compositor-driven, immune to main-thread
-              jank (framer-motion's per-frame style writes were the lag). */}
-          <div
-            className={`relative h-full w-full ${
-              reduceMotion ? "" : "animate-kenburns"
-            }`}
-          >
-            <Image
-              src={current.url}
-              alt=""
-              fill
-              priority={index === 0}
-              sizes="100vw"
-              className={
-                portraitSlide ? "object-contain" : "object-cover"
+          <Image
+            src={current.url}
+            alt=""
+            fill
+            priority={index === 0}
+            sizes="100vw"
+            className={portraitSlide ? "object-contain" : "object-cover"}
+            onLoad={(event) => {
+              const img = event.currentTarget;
+              if (img.naturalWidth > 0) {
+                setPortraitSlide(img.naturalHeight > img.naturalWidth * 1.05);
               }
-              onLoad={(event) => {
-                const img = event.currentTarget;
-                if (img.naturalWidth > 0) {
-                  setPortraitSlide(img.naturalHeight > img.naturalWidth * 1.05);
-                }
-              }}
-            />
-          </div>
+            }}
+          />
         </motion.div>
       </AnimatePresence>
 
