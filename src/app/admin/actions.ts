@@ -5,6 +5,7 @@ import { isAdmin, requireAdmin } from "@/lib/auth";
 import { MAX_COUPLE_PHOTOS } from "@/lib/limits";
 import { cloudinary, cloudinaryConfigured } from "@/lib/cloudinary";
 import type { Settings, WeddingEvent } from "@/lib/settings";
+import { revalidateGuestPhotos } from "@/lib/photos";
 import { setRsvpHidden } from "@/lib/rsvps";
 import { saveSettings, getSettings } from "@/lib/store";
 import { isThemeId } from "@/lib/themes";
@@ -186,6 +187,7 @@ export async function setGuestPhotosVisibilityAction(
 ): Promise<ActionResult> {
   return runSafe(async (): Promise<ActionResult> => {
     await saveSettings({ guestPhotosShowNow: Boolean(showNow) });
+    revalidateGuestPhotos();
     refresh();
     return { ok: true };
   });
@@ -208,6 +210,7 @@ export async function setGuestPhotoHiddenAction(
       set.delete(cleanId);
     }
     await saveSettings({ hiddenGuestPhotos: [...set] });
+    revalidateGuestPhotos();
     refresh();
     return { ok: true };
   });

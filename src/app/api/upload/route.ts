@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { UploadApiResponse } from "cloudinary";
 import { cloudinary, cloudinaryConfigured } from "@/lib/cloudinary";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
+import { revalidateGuestPhotos } from "@/lib/photos";
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
@@ -79,6 +80,8 @@ export async function POST(request: Request) {
       );
       stream.end(buffer);
     });
+
+    revalidateGuestPhotos();
 
     return NextResponse.json({
       ok: true,

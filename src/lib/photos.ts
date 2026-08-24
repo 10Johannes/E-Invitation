@@ -1,5 +1,7 @@
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { cloudinary, cloudinaryConfigured } from "./cloudinary";
+
+export const GALLERY_CACHE_TAG = "wedding-gallery";
 
 export type GalleryPhoto = {
   id: string;
@@ -65,10 +67,20 @@ async function fetchPhotos(): Promise<GalleryPhoto[]> {
  */
 export const getPhotos = unstable_cache(fetchPhotos, ["wedding-gallery"], {
   revalidate: 60,
-  tags: ["wedding-gallery"],
+  tags: [GALLERY_CACHE_TAG],
 });
 
 /** Fresh read for the admin panel — bypasses the 60s cache. */
 export async function getPhotosUncached(): Promise<GalleryPhoto[]> {
   return fetchPhotos();
+}
+
+/**
+ * Expire the cached guest-photo list immediately after a write (guest
+ * upload or moderation change) so the public gallery reflects it at once.
+ * `{ expire: 0 }` is the Next 16 replacement for the deprecated
+ * single-argument `revalidateTag(tag)` form.
+ */
+export function revalidateGuestPhotos(): void {
+  revalidateTag(GALLERY_CACHE_TAG, { expire: 0 });
 }

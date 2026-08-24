@@ -7,7 +7,14 @@ import type { Settings } from "@/lib/settings";
 const FILE_PATH = path.join(process.cwd(), ".data", "settings.json");
 const REDIS_KEY = "wedding-settings";
 
-let memoryCache: Settings | null = null;
+/**
+ * Short-lived cache to absorb request bursts. It must expire quickly: a
+ * process-lifetime snapshot would keep serving stale settings forever on
+ * multi-instance hosts (e.g. Vercel) after another instance saves.
+ */
+const SETTINGS_TTL_MS = 5000;
+
+let memoryCache: { settings: Settings; fetchedAt: number } | null = null;
 
 function upstashConfigured(): boolean {
   return Boolean(
@@ -108,7 +115,9 @@ function normalize(raw: Partial<Settings> | null): Settings {
 }
 
 export async function getSettings(): Promise<Settings> {
-  if (memoryCache) return memoryCache;
+  if (memoryCache && Date.now() - memoryCache.fetchedAt < SETTINGS_TTL_MS) {
+    return memoryCache.settings;
+  }
 
   let raw: Settings | null = null;
   try {
@@ -117,8 +126,9 @@ export async function getSettings(): Promise<Settings> {
     console.error("Failed to read settings", error);
   }
 
-  memoryCache = normalize(raw);
-  return memoryCache;
+  const settings = normalize(raw);
+  memoryCache = { settings, fetchedAt: Date.now() };
+  return settings;
 }
 
 export async function saveSettings(patch: Partial<Settings>): Promise<Settings> {
@@ -131,6 +141,6 @@ export async function saveSettings(patch: Partial<Settings>): Promise<Settings> 
     await fileSet(next);
   }
 
-  memoryCache = next;
+  memoryCache = { settings: next, fetchedAt: Date.now() };
   return next;
 }
