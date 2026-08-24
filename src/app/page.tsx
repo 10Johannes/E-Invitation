@@ -374,8 +374,8 @@ export default async function Home({ searchParams }: HomeProps) {
           </section>
         </div>
 
-        {/* Gallery + photo sharing — shown during and after the event, or as
-            soon as the first guest photo arrives (configurable in /admin) */}
+        {/* Guest gallery — shown during and after the event, or as soon as
+            the first guest photo arrives (configurable in /admin) */}
         {galleryOpen && (
           <>
             <div className="relative">
@@ -445,9 +445,9 @@ export default async function Home({ searchParams }: HomeProps) {
           </section>
         </div>
 
-        {/* Share CTA — shown during and after the event, or as soon as the
-            gallery is live */}
-        {galleryOpen && (
+        {/* Share CTA — always available once photo storage is configured;
+            gallery visibility above does not gate sharing */}
+        {cloudinaryConfigured && (
           <div className="relative">
             <Parallax speed={-0.18} aria-hidden className="pointer-events-none absolute -left-12 bottom-0 hidden lg:block">
               <GlowDot className="h-44 w-44" />
