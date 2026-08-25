@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import CameraCapture from "./CameraCapture";
+import { ALBUMS, DEFAULT_ALBUM, type AlbumId } from "@/lib/albums";
 
 const MAX_FILES = 20;
 const MAX_SIZE_MB = 10;
@@ -40,6 +41,7 @@ export default function UploadClient({
   const [phase, setPhase] = useState<Phase>("gate");
   const [passcode, setPasscode] = useState("");
   const [guestName, setGuestName] = useState("");
+  const [album, setAlbum] = useState<AlbumId>(DEFAULT_ALBUM);
   const [items, setItems] = useState<Item[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const itemsRef = useRef<Item[]>([]);
@@ -115,6 +117,7 @@ export default function UploadClient({
       const form = new FormData();
       form.set("passcode", passcode.trim());
       form.set("guestName", guestName.trim());
+      form.set("album", album);
       form.set(
         "file",
         compressed,
@@ -131,7 +134,7 @@ export default function UploadClient({
 
       updateItem(item.id, { status: "done", progress: 100 });
     },
-    [guestName, passcode, updateItem]
+    [album, guestName, passcode, updateItem]
   );
 
   async function runQueue() {
@@ -264,6 +267,29 @@ export default function UploadClient({
               className="mt-2 w-full rounded-xl border border-charcoal/10 bg-charcoal/5 px-4 py-3 text-base text-charcoal outline-none transition placeholder:text-charcoal/40 focus:border-deeprose focus:bg-charcoal/10"
             />
           </label>
+
+          <fieldset className="mt-5">
+            <legend className="text-sm font-medium text-charcoal">
+              Which album?
+            </legend>
+            <div className="mt-2 flex flex-wrap gap-2" role="group">
+              {ALBUMS.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  aria-pressed={album === a.id}
+                  onClick={() => setAlbum(a.id)}
+                  className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.15em] transition ${
+                    album === a.id
+                      ? "bg-wine text-ivory"
+                      : "border border-charcoal/10 bg-charcoal/5 text-charcoal/70 hover:text-wine"
+                  }`}
+                >
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
           {formError && (
             <p role="alert" className="mt-4 text-sm text-deeprose">

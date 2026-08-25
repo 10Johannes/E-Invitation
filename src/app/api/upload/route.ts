@@ -2,6 +2,7 @@ import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import type { UploadApiResponse } from "cloudinary";
 import { cloudinary, cloudinaryConfigured } from "@/lib/cloudinary";
+import { toAlbumId } from "@/lib/albums";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { revalidateGuestPhotos } from "@/lib/photos";
 
@@ -63,6 +64,13 @@ export async function POST(request: Request) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+  const album = toAlbumId(form.get("album"));
+  const context = [
+    guestName ? `guest=${guestName}` : null,
+    `album=${album}`,
+  ]
+    .filter(Boolean)
+    .join("|");
 
   try {
     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
@@ -70,7 +78,7 @@ export async function POST(request: Request) {
         {
           folder: "wedding/gallery",
           tags: ["wedding-gallery"],
-          context: guestName ? `guest=${guestName}` : undefined,
+          context,
           resource_type: "image",
         },
         (error, response) => {

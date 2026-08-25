@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { isAdmin, requireAdmin } from "@/lib/auth";
 import { MAX_COUPLE_PHOTOS } from "@/lib/limits";
 import { cloudinary, cloudinaryConfigured } from "@/lib/cloudinary";
+import { isAlbumId } from "@/lib/albums";
 import type { Settings, WeddingEvent } from "@/lib/settings";
-import { revalidateGuestPhotos } from "@/lib/photos";
+import { getPhotosUncached, revalidateGuestPhotos } from "@/lib/photos";
 import { setRsvpHidden } from "@/lib/rsvps";
 import { saveSettings, getSettings } from "@/lib/store";
 import { isThemeId } from "@/lib/themes";
@@ -210,6 +211,39 @@ export async function setGuestPhotoHiddenAction(
       set.delete(cleanId);
     }
     await saveSettings({ hiddenGuestPhotos: [...set] });
+    revalidateGuestPhotos();
+    refresh();
+    return { ok: true };
+  });
+}
+
+export async function setGuestPhotoAlbumAction(
+  id: string,
+  album: string
+): Promise<ActionResult> {
+  return runSafe(async (): Promise<ActionResult> => {
+    const cleanId = typeof id === "string" ? id.trim().slice(0, 200) : "";
+    if (!cleanId) {
+      return { ok: false, error: "That photo could not be found." };
+    }
+    if (!isAlbumId(album)) {
+      return { ok: false, error: "Unknown album." };
+    }
+    if (!cloudinaryConfigured) {
+      return { ok: false, error: "Photo storage is not configured." };
+    }
+
+    // The explicit call replaces the whole context, so keep the guest name.
+    const photo = (await getPhotosUncached()).find((p) => p.id === cleanId);
+    const context = [photo?.guest ? `guest=${photo.guest}` : null, `album=${album}`]
+      .filter(Boolean)
+      .join("|");
+
+    await cloudinary.uploader.explicit(cleanId, {
+      type: "upload",
+      resource_type: "image",
+      context,
+    });
     revalidateGuestPhotos();
     refresh();
     return { ok: true };

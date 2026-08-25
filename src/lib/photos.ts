@@ -1,5 +1,6 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { cloudinary, cloudinaryConfigured } from "./cloudinary";
+import { toAlbumId, type AlbumId } from "./albums";
 
 export const GALLERY_CACHE_TAG = "wedding-gallery";
 
@@ -10,6 +11,7 @@ export type GalleryPhoto = {
   width: number;
   height: number;
   guest?: string;
+  album: AlbumId;
   createdAt?: string;
 };
 
@@ -26,7 +28,7 @@ async function fetchPhotos(): Promise<GalleryPhoto[]> {
 
     return result.resources.map((resource) => {
       const context = resource.context as
-        | { custom?: { guest?: unknown } }
+        | { custom?: { guest?: unknown; album?: unknown } }
         | undefined;
       const guest =
         typeof context?.custom?.guest === "string"
@@ -50,6 +52,7 @@ async function fetchPhotos(): Promise<GalleryPhoto[]> {
         width: resource.width,
         height: resource.height,
         guest,
+        album: toAlbumId(context?.custom?.album),
         createdAt:
           typeof resource.created_at === "string"
             ? resource.created_at

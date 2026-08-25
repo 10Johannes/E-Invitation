@@ -7,6 +7,7 @@ import {
   removePhotoAction,
   reorderPhotosAction,
   saveContentAction,
+  setGuestPhotoAlbumAction,
   setGuestPhotoHiddenAction,
   setGuestPhotosVisibilityAction,
   setRsvpHiddenAction,
@@ -15,6 +16,7 @@ import {
   type ActionResult,
   type ContentInput,
 } from "./actions";
+import { ALBUMS, albumLabel, toAlbumId, type AlbumId } from "@/lib/albums";
 import type { PhotoView } from "@/lib/couple-photos";
 import { MAX_COUPLE_PHOTOS } from "@/lib/limits";
 import type { OpenEntry } from "@/lib/opens";
@@ -963,8 +965,13 @@ function GuestGalleryTab({
   initialHidden: string[];
   onDone: (msg: string) => void;
 }) {
+  const router = useRouter();
   const [hiddenIds, setHiddenIds] = useState<string[]>(initialHidden);
+  const [albums, setAlbums] = useState<Record<string, AlbumId>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const albumOf = (photo: GalleryPhoto): AlbumId =>
+    albums[photo.id] ?? photo.album;
 
   async function toggle(photo: GalleryPhoto) {
     if (busyId) return;
@@ -994,6 +1001,35 @@ function GuestGalleryTab({
     }
   }
 
+  async function changeAlbum(photo: GalleryPhoto, album: AlbumId) {
+    if (busyId || albumOf(photo) === album) return;
+    setBusyId(photo.id);
+    setAlbums((prev) => ({ ...prev, [photo.id]: album }));
+    try {
+      const result = await setGuestPhotoAlbumAction(photo.id, album);
+      if (result.ok) {
+        onDone(`Moved to ${albumLabel(album)}.`);
+        router.refresh();
+      } else {
+        revertAlbum(photo.id);
+        onDone(result.error);
+      }
+    } catch {
+      revertAlbum(photo.id);
+      onDone("Could not move that photo. Please try again.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function revertAlbum(id: string) {
+    setAlbums((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
   const hiddenCount = photos.filter((p) => hiddenIds.includes(p.id)).length;
 
   return (
@@ -1015,7 +1051,8 @@ function GuestGalleryTab({
       </div>
       <p className="mt-1 text-sm text-charcoal/70">
         Hiding a photo removes it from the public site only — nothing is ever
-        deleted, so this is always reversible.
+        deleted, so this is always reversible. Use the album picker to choose
+        where each photo appears in the gallery.
       </p>
 
       {photos.length === 0 ? (
@@ -1044,28 +1081,43 @@ function GuestGalleryTab({
                     hidden ? "grayscale" : ""
                   }`}
                 />
-                <div className="flex items-center justify-between gap-2 p-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-serif text-base italic text-charcoal">
-                      {photo.guest || "Unknown guest"}
-                    </p>
-                    {photo.createdAt && (
-                      <p className="text-xs text-charcoal/45">
-                        {new Date(photo.createdAt).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                        })}
+                <div className="space-y-2 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate font-serif text-base italic text-charcoal">
+                        {photo.guest || "Unknown guest"}
                       </p>
-                    )}
+                      {photo.createdAt && (
+                        <p className="text-xs text-charcoal/45">
+                          {new Date(photo.createdAt).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={busyId === photo.id}
+                      onClick={() => toggle(photo)}
+                      className="shrink-0 rounded-full bg-charcoal/10 px-3 py-1 text-xs text-charcoal transition hover:bg-charcoal/20 disabled:opacity-40"
+                    >
+                      {hidden ? "Show" : "Hide"}
+                    </button>
                   </div>
-                  <button
-                    type="button"
+                  <select
+                    aria-label={`Album for the photo by ${photo.guest || "an unknown guest"}`}
+                    value={albumOf(photo)}
                     disabled={busyId === photo.id}
-                    onClick={() => toggle(photo)}
-                    className="shrink-0 rounded-full bg-charcoal/10 px-3 py-1 text-xs text-charcoal transition hover:bg-charcoal/20 disabled:opacity-40"
+                    onChange={(e) => changeAlbum(photo, toAlbumId(e.target.value))}
+                    className="w-full cursor-pointer rounded-lg border border-charcoal/10 bg-white/60 px-2.5 py-1.5 text-xs text-charcoal outline-none transition focus:border-deeprose disabled:opacity-40"
                   >
-                    {hidden ? "Show" : "Hide"}
-                  </button>
+                    {ALBUMS.map((album) => (
+                      <option key={album.id} value={album.id}>
+                        {album.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </li>
             );
