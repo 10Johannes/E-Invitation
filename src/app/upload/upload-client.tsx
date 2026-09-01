@@ -12,7 +12,6 @@ const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 type UploadClientProps = {
   first: string;
   second: string;
-  hint: string;
 };
 
 type Status = "queued" | "compressing" | "uploading" | "done" | "error";
@@ -36,10 +35,8 @@ function newId(): string {
 export default function UploadClient({
   first,
   second,
-  hint,
 }: UploadClientProps) {
   const [phase, setPhase] = useState<Phase>("gate");
-  const [passcode, setPasscode] = useState("");
   const [guestName, setGuestName] = useState("");
   const [album, setAlbum] = useState<AlbumId>(DEFAULT_ALBUM);
   const [items, setItems] = useState<Item[]>([]);
@@ -115,7 +112,6 @@ export default function UploadClient({
       updateItem(item.id, { status: "uploading", progress: 45 });
 
       const form = new FormData();
-      form.set("passcode", passcode.trim());
       form.set("guestName", guestName.trim());
       form.set("album", album);
       form.set(
@@ -134,7 +130,7 @@ export default function UploadClient({
 
       updateItem(item.id, { status: "done", progress: 100 });
     },
-    [album, guestName, passcode, updateItem]
+    [album, guestName, updateItem]
   );
 
   async function runQueue() {
@@ -157,10 +153,6 @@ export default function UploadClient({
   }
 
   function confirmDetails(target: "picker" | "camera") {
-    if (!passcode.trim()) {
-      setFormError("Please enter your event code.");
-      return;
-    }
     setFormError(null);
     openCameraOrPicker(target);
   }
@@ -241,21 +233,6 @@ export default function UploadClient({
       {phase === "gate" && (
         <section className="glass rounded-3xl p-7">
           <label className="block text-sm font-medium text-charcoal">
-            Event code
-            <input
-              type="text"
-              value={passcode}
-              onChange={(e) => setPasscode(e.target.value)}
-              placeholder="Enter your code"
-              autoComplete="off"
-              className="mt-2 w-full rounded-xl border border-charcoal/10 bg-charcoal/5 px-4 py-3 text-base text-charcoal outline-none transition placeholder:text-charcoal/40 focus:border-deeprose focus:bg-charcoal/10"
-            />
-          </label>
-          <p className="mt-2 text-xs text-charcoal/55">
-            Find it on {hint}.
-          </p>
-
-          <label className="mt-5 block text-sm font-medium text-charcoal">
             Your name{" "}
             <span className="font-normal text-charcoal/50">(optional)</span>
             <input

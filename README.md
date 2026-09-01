@@ -11,7 +11,7 @@ Built with Next.js (App Router) + TypeScript + Tailwind CSS v4 + framer-motion. 
   - Scroll-driven parallax: gradient orbs, floating polaroid side-photos, interactive green vines that grow as guests scroll and bloom flowers on tap
   - Countdown, church/ceremony + reception cards with Maps links, vinyl-record music player
   - Live guest-photo gallery with lightbox
-- **Guest uploads** (`/upload`) — QR-code target: event passcode gate, optional guest name, client-side compression
+- **Guest uploads** (`/upload`) — QR-code target: optional guest name, client-side compression
 - **QR postcard** (`/qr`) — print-perfect A6 landscape table card in the active theme
 - **Admin panel** (`/admin`) — passcode-protected:
   - **Theme** — six palettes applied site-wide instantly (Dusty Pink, Sage & Cream, Navy & Gold, Terracotta, Lavender Mist, Classic Ivory)
@@ -35,7 +35,6 @@ npm run dev
 | `CLOUDINARY_CLOUD_NAME` | for uploads/photos | Cloudinary account name |
 | `CLOUDINARY_API_KEY` | for uploads/photos | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | for uploads/photos | Cloudinary API secret |
-| `EVENT_PASSCODE` | for uploads | Code guests must enter on `/upload` |
 | `UPSTASH_REDIS_REST_URL` | recommended on Vercel | Settings storage (free tier works) |
 | `UPSTASH_REDIS_REST_TOKEN` | recommended on Vercel | Upstash REST token |
 | `NEXT_PUBLIC_SITE_URL` | recommended in prod | Absolute URL used for OG tags |

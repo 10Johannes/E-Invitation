@@ -76,7 +76,6 @@ export type ContentInput = {
   venue: { name: string; address: string; mapsUrl: string };
   events: WeddingEvent[];
   spotifyPlaylistUrl: string;
-  uploadPasscodeHint: string;
   loveNote: string;
   dressCode: string;
   registryNote: string;
@@ -171,7 +170,6 @@ export async function saveContentAction(
     },
     events: cleanedEvents,
     spotifyPlaylistUrl: spotify,
-    uploadPasscodeHint: clean(input.uploadPasscodeHint, 200),
     loveNote: clean(input.loveNote, 400),
     dressCode: clean(input.dressCode, 160),
     registryNote: clean(input.registryNote, 300),

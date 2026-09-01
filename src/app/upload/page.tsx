@@ -18,7 +18,6 @@ export default async function UploadPage() {
     <UploadClient
       first={settings.couple.first}
       second={settings.couple.second}
-      hint={settings.uploadPasscodeHint}
     />
   );
 }

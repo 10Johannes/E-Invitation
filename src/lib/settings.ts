@@ -39,7 +39,6 @@ export type Settings = {
   };
   events: WeddingEvent[];
   spotifyPlaylistUrl: string;
-  uploadPasscodeHint: string;
   guestPhotosShowNow: boolean;
   hiddenGuestPhotos: string[];
   heroPhotos: CouplePhoto[];

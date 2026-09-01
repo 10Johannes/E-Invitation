@@ -5,7 +5,6 @@ services:
       - "3000:3000"
     environment:
       # Defaults for local testing; override via host env or .env
-      EVENT_PASSCODE: ${EVENT_PASSCODE:-censmar-eduardo2026}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}

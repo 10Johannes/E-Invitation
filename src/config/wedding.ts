@@ -42,7 +42,6 @@ export const DEFAULT_SETTINGS: Settings = {
     },
   ],
   spotifyPlaylistUrl: "",
-  uploadPasscodeHint: "the code printed at the bottom of your invitation card",
   guestPhotosShowNow: true,
   hiddenGuestPhotos: [],
   heroPhotos: [],

@@ -1,4 +1,3 @@
-import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import type { UploadApiResponse } from "cloudinary";
 import { cloudinary, cloudinaryConfigured } from "@/lib/cloudinary";
@@ -9,16 +8,8 @@ import { revalidateGuestPhotos } from "@/lib/photos";
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 
-function passcodeMatches(input: string): boolean {
-  const expected = process.env.EVENT_PASSCODE ?? "";
-  if (!expected) return false;
-  const a = Buffer.from(input.trim().toLowerCase());
-  const b = Buffer.from(expected.trim().toLowerCase());
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
 export async function POST(request: Request) {
-  if (!cloudinaryConfigured || !process.env.EVENT_PASSCODE) {
+  if (!cloudinaryConfigured) {
     return NextResponse.json(
       { error: "Photo sharing is not configured yet. Please try again later." },
       { status: 503 }
@@ -37,11 +28,6 @@ export async function POST(request: Request) {
     form = await request.formData();
   } catch {
     return NextResponse.json({ error: "Invalid form data." }, { status: 400 });
-  }
-
-  const passcode = String(form.get("passcode") ?? "");
-  if (!passcodeMatches(passcode)) {
-    return NextResponse.json({ error: "Incorrect event code." }, { status: 401 });
   }
 
   const guestName = String(form.get("guestName") ?? "").trim().slice(0, 60);

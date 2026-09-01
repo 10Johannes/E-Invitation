@@ -452,17 +452,6 @@ function ContentTab({
         </Field>
 
         <Field
-          label="Guest upload hint"
-          hint="Shown under the event-code box on /upload"
-        >
-          <input
-            value={form.uploadPasscodeHint}
-            onChange={(e) => update({ uploadPasscodeHint: e.target.value })}
-            className={inputClass}
-          />
-        </Field>
-
-        <Field
           label="Guest photos in gallery"
           hint="When visitors can see the photos and moments guests share"
         >
