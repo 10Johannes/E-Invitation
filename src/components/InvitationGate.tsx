@@ -61,11 +61,15 @@ export default function InvitationGate({
     }
     document.documentElement.style.overflow = "";
     setOpen(true);
-    window.dispatchEvent(new Event("invite:open"));
   }
 
   function breakSeal() {
     if (stage !== "sealed") return;
+    // Fire the audio/effects cue at the moment of the click so Spotify's
+    // play() lands inside the browser's user-gesture window (autoplay is
+    // otherwise rejected as a "non-user-initiated" playback). The envelope
+    // animation still plays out on the staged timer below.
+    window.dispatchEvent(new Event("invite:open"));
     if (reduceMotion) {
       handleOpen();
       return;

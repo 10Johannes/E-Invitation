@@ -105,6 +105,16 @@ export default function VinylPlayer({
       wantPlayRef.current = true;
       setNudged(true);
       controllerRef.current?.play();
+      // The Spotify controller may still be initializing at the moment of the
+      // click. Retry for a short window so the play call lands while the
+      // browser still counts it as a user-initiated gesture.
+      const interval = window.setInterval(() => {
+        if (controllerRef.current) {
+          controllerRef.current.play();
+          window.clearInterval(interval);
+        }
+      }, 150);
+      window.setTimeout(() => window.clearInterval(interval), 1500);
     }
     window.addEventListener("invite:open", onOpen);
     return () => window.removeEventListener("invite:open", onOpen);
