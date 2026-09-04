@@ -76,6 +76,7 @@ export type ContentInput = {
   venue: { name: string; address: string; mapsUrl: string };
   events: WeddingEvent[];
   spotifyPlaylistUrl: string;
+  audioUrl: string;
   loveNote: string;
   dressCode: string;
   registryNote: string;
@@ -115,6 +116,11 @@ export async function saveContentAction(
       ok: false,
       error: "That does not look like a Spotify playlist URL.",
     };
+  }
+
+  const audioUrl = clean(input.audioUrl, 1000);
+  if (audioUrl && !/^https?:\/\//.test(audioUrl)) {
+    return { ok: false, error: "The audio URL must start with http(s)://" };
   }
 
   const registryUrl = clean(input.registryUrl, 500);
@@ -170,6 +176,7 @@ export async function saveContentAction(
     },
     events: cleanedEvents,
     spotifyPlaylistUrl: spotify,
+    audioUrl,
     loveNote: clean(input.loveNote, 400),
     dressCode: clean(input.dressCode, 160),
     registryNote: clean(input.registryNote, 300),

@@ -452,6 +452,18 @@ function ContentTab({
         </Field>
 
         <Field
+          label="Background music URL"
+          hint="Direct link to a hosted audio file (.mp3). When set, this plays on envelope open instead of the Spotify embed."
+        >
+          <input
+            value={form.audioUrl}
+            onChange={(e) => update({ audioUrl: e.target.value })}
+            placeholder="https://…/track.mp3"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field
           label="Guest photos in gallery"
           hint="When visitors can see the photos and moments guests share"
         >

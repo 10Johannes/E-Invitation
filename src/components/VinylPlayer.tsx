@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
+// --- Spotify Iframe API types (used only for the playlist fallback) ---
 type SpotifyIFrameAPI = {
   createController: (
     element: HTMLElement,
@@ -47,6 +48,7 @@ function loadSpotifyIframeApi(): Promise<SpotifyIFrameAPI> {
 
 type VinylPlayerProps = {
   playlistUrl: string;
+  audioUrl: string;
   first: string;
   second: string;
 };
@@ -55,19 +57,41 @@ const EQ_DELAYS = ["0s", "0.15s", "0.3s", "0.45s", "0.6s"];
 
 export default function VinylPlayer({
   playlistUrl,
+  audioUrl,
   first,
   second,
 }: VinylPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [nudged, setNudged] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<SpotifyController | null>(null);
   const wantPlayRef = useRef(false);
 
   const playlistId = playlistUrl.match(/playlist\/([A-Za-z0-9]+)/)?.[1];
+  const hasAudio = Boolean(audioUrl);
 
+  // --- Native <audio> path (preferred: reliable autoplay) ---
   useEffect(() => {
-    if (!playlistId) return;
+    if (!hasAudio || !audioRef.current) return;
+    const audio = audioRef.current;
+    audio.preload = "auto";
+    const onPlay = () => {
+      setPlaying(true);
+      setNudged(true);
+    };
+    const onPause = () => setPlaying(false);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+    return () => {
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+    };
+  }, [hasAudio, audioUrl]);
+
+  // --- Spotify Iframe API path (fallback when no audio file) ---
+  useEffect(() => {
+    if (!playlistId || hasAudio) return;
     let disposed = false;
 
     loadSpotifyIframeApi().then((api) => {
@@ -98,16 +122,23 @@ export default function VinylPlayer({
       controllerRef.current?.destroy?.();
       controllerRef.current = null;
     };
-  }, [playlistId]);
+  }, [playlistId, hasAudio]);
 
+  // --- Start playback on envelope open ---
   useEffect(() => {
     function onOpen() {
       wantPlayRef.current = true;
       setNudged(true);
+      const audio = audioRef.current;
+      if (hasAudio && audio) {
+        // Play directly inside the click-gesture task; native audio accepts
+        // this far more reliably than the Spotify iframe bridge.
+        audio.play().catch(() => {
+          // Autoplay blocked — the visible play button is a valid gesture.
+        });
+        return;
+      }
       controllerRef.current?.play();
-      // The Spotify controller may still be initializing at the moment of the
-      // click. Retry for a short window so the play call lands while the
-      // browser still counts it as a user-initiated gesture.
       const interval = window.setInterval(() => {
         if (controllerRef.current) {
           controllerRef.current.play();
@@ -118,12 +149,20 @@ export default function VinylPlayer({
     }
     window.addEventListener("invite:open", onOpen);
     return () => window.removeEventListener("invite:open", onOpen);
-  }, []);
+  }, [hasAudio]);
 
   function toggle() {
+    const audio = audioRef.current;
+    if (hasAudio && audio) {
+      if (audio.paused) {
+        audio.play().catch(() => {});
+      } else {
+        audio.pause();
+      }
+      return;
+    }
     const controller = controllerRef.current;
     if (!controller) {
-      // Not wired up yet — queue playback for when the controller is ready.
       wantPlayRef.current = true;
       return;
     }
@@ -131,7 +170,7 @@ export default function VinylPlayer({
     controller.togglePlay();
   }
 
-  if (!playlistId) {
+  if (!playlistId && !hasAudio) {
     return (
       <div className="glass rounded-3xl p-6 sm:p-8">
         <div className="flex flex-col items-center gap-7 sm:flex-row sm:gap-9">
@@ -241,26 +280,36 @@ export default function VinylPlayer({
               {playing ? "❚❚" : "▶"}
             </button>
 
-            <p className="text-xs text-charcoal/60">
-              Full tracks need a free Spotify login.
-            </p>
+            {!hasAudio && (
+              <p className="text-xs text-charcoal/60">
+                Full tracks need a free Spotify login.
+              </p>
+            )}
           </div>
         </div>
 
-        {/* The Spotify-controlled embed stays mounted so its controller keeps
-            working across collapse/expand. */}
-        <motion.div
-          initial={false}
-          animate={{
-            height: playing ? "auto" : 0,
-            opacity: playing ? 1 : 0,
-            marginTop: playing ? 24 : 0,
-          }}
-          transition={{ duration: 0.45, ease: "easeInOut" }}
-          className="overflow-hidden"
-        >
-          <div ref={containerRef} />
-        </motion.div>
+        {hasAudio ? (
+          <audio
+            ref={audioRef}
+            src={audioUrl}
+            preload="auto"
+            loop
+            className="hidden"
+          />
+        ) : (
+          <motion.div
+            initial={false}
+            animate={{
+              height: playing ? "auto" : 0,
+              opacity: playing ? 1 : 0,
+              marginTop: playing ? 24 : 0,
+            }}
+            transition={{ duration: 0.45, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div ref={containerRef} />
+          </motion.div>
+        )}
       </div>
     </div>
   );

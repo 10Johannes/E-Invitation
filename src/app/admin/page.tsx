@@ -36,6 +36,7 @@ export default async function AdminPage() {
     venue: settings.venue,
     events: settings.events,
     spotifyPlaylistUrl: settings.spotifyPlaylistUrl,
+    audioUrl: settings.audioUrl,
     loveNote: settings.loveNote,
     dressCode: settings.dressCode,
     registryNote: settings.registryNote,

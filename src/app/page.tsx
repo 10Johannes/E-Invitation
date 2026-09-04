@@ -367,6 +367,7 @@ export default async function Home({ searchParams }: HomeProps) {
             <Reveal delay={0.1}>
               <VinylPlayer
                 playlistUrl={settings.spotifyPlaylistUrl}
+                audioUrl={settings.audioUrl}
                 first={couple.first}
                 second={couple.second}
               />
