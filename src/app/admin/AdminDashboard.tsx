@@ -24,6 +24,7 @@ import type { GalleryPhoto } from "@/lib/photos";
 import type { RsvpEntry } from "@/lib/rsvps";
 import type { WeddingEvent } from "@/lib/settings";
 import { formatShortDate } from "@/config/wedding";
+import { CAROUSEL_EFFECTS } from "@/lib/carousel";
 import { THEMES, type ThemeId } from "@/lib/themes";
 
 type Tab = "theme" | "content" | "photos" | "gallery" | "rsvp";
@@ -538,6 +539,31 @@ function ContentTab({
                 </span>
                 <span className="mt-0.5 block text-xs text-charcoal/60">
                   {option.caption}
+                </span>
+              </button>
+            ))}
+          </div>
+        </Field>
+
+        <Field
+          label="Photo carousel style"
+          hint="How the hero and guest gallery photo carousels animate"
+        >
+          <div className="mt-1.5 grid grid-cols-3 gap-2" role="group">
+            {CAROUSEL_EFFECTS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                aria-pressed={form.carouselEffect === option.id}
+                onClick={() => update({ carouselEffect: option.id })}
+                className={`rounded-xl border px-3 py-2.5 text-left transition ${
+                  form.carouselEffect === option.id
+                    ? "border-deeprose bg-deeprose/10"
+                    : "border-charcoal/10 bg-charcoal/5 hover:border-dusty"
+                }`}
+              >
+                <span className="block text-sm font-medium text-charcoal">
+                  {option.label}
                 </span>
               </button>
             ))}

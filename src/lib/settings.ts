@@ -1,3 +1,4 @@
+import type { CarouselEffect } from "@/lib/carousel";
 import type { ThemeId } from "@/lib/themes";
 
 export type CouplePhoto = {
@@ -19,6 +20,7 @@ export type EntourageGroup = {
 
 export type Settings = {
   theme: ThemeId;
+  carouselEffect: CarouselEffect;
   couple: {
     first: string;
     second: string;

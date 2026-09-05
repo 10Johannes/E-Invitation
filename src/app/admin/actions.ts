@@ -10,6 +10,7 @@ import { getPhotosUncached, revalidateGuestPhotos } from "@/lib/photos";
 import { setRsvpHidden } from "@/lib/rsvps";
 import { saveSettings, getSettings } from "@/lib/store";
 import { isThemeId } from "@/lib/themes";
+import { isCarouselEffect, type CarouselEffect } from "@/lib/carousel";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -64,6 +65,7 @@ export async function setThemeAction(themeId: string): Promise<ActionResult> {
 }
 
 export type ContentInput = {
+  carouselEffect: CarouselEffect;
   couple: {
     first: string;
     second: string;
@@ -97,6 +99,9 @@ export async function saveContentAction(
     if (!first || !second) {
       return { ok: false, error: "Both names are required." };
     }
+    const carouselEffect = isCarouselEffect(input.carouselEffect)
+      ? input.carouselEffect
+      : "fan";
   if (Number.isNaN(new Date(input.dateISO).getTime())) {
     return { ok: false, error: "The date is not valid. Use the format shown." };
   }
@@ -167,6 +172,7 @@ export async function saveContentAction(
   }
 
   await saveSettings({
+    carouselEffect,
     couple: {
       first,
       second,

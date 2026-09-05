@@ -145,7 +145,7 @@ export default async function Home({ searchParams }: HomeProps) {
         {/* Hero */}
         <section className="relative text-center">
           <div className="relative h-[58svh] min-h-[340px] overflow-hidden sm:h-[66svh]">
-            <HeroSlideshow photos={heroSlides} />
+            <HeroSlideshow photos={heroSlides} effect={settings.carouselEffect} />
           </div>
 
           <div className="relative mx-auto mt-9 flex max-w-xl flex-col items-center gap-5 px-2">
@@ -397,7 +397,10 @@ export default async function Home({ searchParams }: HomeProps) {
                 </Reveal>
 
                 {visibleGuestPhotos.length > 0 ? (
-                  <Gallery photos={visibleGuestPhotos} />
+                  <Gallery
+                    photos={visibleGuestPhotos}
+                    effect={settings.carouselEffect}
+                  />
                 ) : (
                   <Reveal delay={0.1}>
                     <div className="glass rounded-3xl p-10 text-center">

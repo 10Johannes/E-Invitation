@@ -29,6 +29,7 @@ export default async function AdminPage() {
   ]);
 
   const content: ContentInput = {
+    carouselEffect: settings.carouselEffect,
     couple: settings.couple,
     dateISO: settings.dateISO,
     timezoneLabel: settings.timezoneLabel,
