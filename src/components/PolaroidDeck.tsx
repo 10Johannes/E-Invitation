@@ -58,19 +58,19 @@ const GEOMETRY: Record<CarouselEffect, EffectGeometry> = {
       { x: 0, y: 26, rotate: 0, scale: 0.8, opacity: 0, zIndex: 0 },
     ],
     inTop: { x: 6, y: -30, rotate: 8, scale: 1.16, opacity: 0, zIndex: 30 },
-    outTop: { x: -76, y: -8, rotate: -6, scale: 1.06, opacity: 0, zIndex: 30 },
+    outTop: { x: -76, y: -8, rotate: -6, scale: 1.06, opacity: 0, zIndex: 40 },
     outBack: { x: -44, y: 30, rotate: -9, scale: 0.72, opacity: 0, zIndex: 0 },
   },
   flip: {
     rest: [
       { x: 0, y: 0, rotateY: 0, scale: 1, opacity: 1, zIndex: 30, ...P },
-      { x: 14, y: 6, rotateY: 25, scale: 0.94, opacity: 1, zIndex: 20, ...P },
-      { x: -16, y: 10, rotateY: -35, scale: 0.9, opacity: 0.75, zIndex: 10, ...P },
-      { x: 0, y: 26, rotateY: 40, scale: 0.8, opacity: 0, zIndex: 0, ...P },
+      { x: 14, y: 6, rotateY: 15, scale: 0.95, opacity: 1, zIndex: 20, ...P },
+      { x: -16, y: 10, rotateY: -20, scale: 0.9, opacity: 0.75, zIndex: 10, ...P },
+      { x: 0, y: 26, rotateY: 22, scale: 0.8, opacity: 0, zIndex: 0, ...P },
     ],
-    inTop: { x: 4, y: -30, rotateY: -70, scale: 1.1, opacity: 0, zIndex: 30, ...P },
-    outTop: { x: -70, y: -6, rotateY: 70, scale: 1.05, opacity: 0, zIndex: 30, ...P },
-    outBack: { x: -40, y: 30, rotateY: -60, scale: 0.72, opacity: 0, zIndex: 0, ...P },
+    inTop: { x: 4, y: -28, rotateY: -38, scale: 1.06, opacity: 0, zIndex: 30, ...P },
+    outTop: { x: -70, y: -6, rotateY: 44, scale: 1.04, opacity: 0, zIndex: 40, ...P },
+    outBack: { x: -40, y: 30, rotateY: -30, scale: 0.72, opacity: 0, zIndex: 0, ...P },
   },
   swirl: {
     rest: [
@@ -80,7 +80,7 @@ const GEOMETRY: Record<CarouselEffect, EffectGeometry> = {
       { x: 0, y: 26, rotate: 24, scale: 0.8, opacity: 0, zIndex: 0 },
     ],
     inTop: { x: 4, y: -28, rotate: -120, scale: 1.12, opacity: 0, zIndex: 30 },
-    outTop: { x: -72, y: -6, rotate: 140, scale: 1.08, opacity: 0, zIndex: 30 },
+    outTop: { x: -72, y: -6, rotate: 140, scale: 1.08, opacity: 0, zIndex: 40 },
     outBack: { x: -40, y: 30, rotate: -150, scale: 0.72, opacity: 0, zIndex: 0 },
   },
 };
@@ -125,13 +125,13 @@ const PolaroidDeck = forwardRef<PolaroidDeckHandle, PolaroidDeckProps>(
       if (!autoplay || photos.length < 2 || reduceMotion) return;
       const timer = window.setInterval(() => go(1), AUTOPLAY_MS);
       return () => window.clearInterval(timer);
-    }, [autoplay, photos.length, reduceMotion, go]);
+    }, [autoplay, photos.length, reduceMotion, go, index]);
 
     if (photos.length === 0) return null;
 
     const geometry = GEOMETRY[effect];
     const transition: Transition = {
-      duration: reduceMotion ? 0 : 0.6,
+      duration: reduceMotion ? 0 : 0.55,
       ease: [0.22, 0.61, 0.36, 1],
     };
 
