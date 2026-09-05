@@ -53,35 +53,35 @@ const GEOMETRY: Record<CarouselEffect, EffectGeometry> = {
   fan: {
     rest: [
       { x: 0, y: 0, rotate: 0, scale: 1, opacity: 1, zIndex: 30 },
-      { x: 18, y: 8, rotate: 6, scale: 0.94, opacity: 1, zIndex: 20 },
-      { x: -20, y: 14, rotate: -7, scale: 0.87, opacity: 0.75, zIndex: 10 },
-      { x: 0, y: 70, rotate: 0, scale: 0.8, opacity: 0, zIndex: 0 },
+      { x: 18, y: 6, rotate: 6, scale: 0.94, opacity: 1, zIndex: 20 },
+      { x: -20, y: 10, rotate: -7, scale: 0.87, opacity: 0.75, zIndex: 10 },
+      { x: 0, y: 26, rotate: 0, scale: 0.8, opacity: 0, zIndex: 0 },
     ],
-    inTop: { x: 6, y: -52, rotate: 8, scale: 1.16, opacity: 0, zIndex: 30 },
-    outTop: { x: -8, y: -96, rotate: -6, scale: 1.06, opacity: 0, zIndex: 30 },
-    outBack: { x: -44, y: 56, rotate: -9, scale: 0.72, opacity: 0, zIndex: 0 },
+    inTop: { x: 6, y: -30, rotate: 8, scale: 1.16, opacity: 0, zIndex: 30 },
+    outTop: { x: -76, y: -8, rotate: -6, scale: 1.06, opacity: 0, zIndex: 30 },
+    outBack: { x: -44, y: 30, rotate: -9, scale: 0.72, opacity: 0, zIndex: 0 },
   },
   flip: {
     rest: [
       { x: 0, y: 0, rotateY: 0, scale: 1, opacity: 1, zIndex: 30, ...P },
-      { x: 14, y: 8, rotateY: 25, scale: 0.94, opacity: 1, zIndex: 20, ...P },
-      { x: -16, y: 14, rotateY: -35, scale: 0.9, opacity: 0.75, zIndex: 10, ...P },
-      { x: 0, y: 70, rotateY: 40, scale: 0.8, opacity: 0, zIndex: 0, ...P },
+      { x: 14, y: 6, rotateY: 25, scale: 0.94, opacity: 1, zIndex: 20, ...P },
+      { x: -16, y: 10, rotateY: -35, scale: 0.9, opacity: 0.75, zIndex: 10, ...P },
+      { x: 0, y: 26, rotateY: 40, scale: 0.8, opacity: 0, zIndex: 0, ...P },
     ],
-    inTop: { x: 4, y: -52, rotateY: -70, scale: 1.1, opacity: 0, zIndex: 30, ...P },
-    outTop: { x: -6, y: -96, rotateY: 70, scale: 1.05, opacity: 0, zIndex: 30, ...P },
-    outBack: { x: -40, y: 56, rotateY: -60, scale: 0.72, opacity: 0, zIndex: 0, ...P },
+    inTop: { x: 4, y: -30, rotateY: -70, scale: 1.1, opacity: 0, zIndex: 30, ...P },
+    outTop: { x: -70, y: -6, rotateY: 70, scale: 1.05, opacity: 0, zIndex: 30, ...P },
+    outBack: { x: -40, y: 30, rotateY: -60, scale: 0.72, opacity: 0, zIndex: 0, ...P },
   },
   swirl: {
     rest: [
       { x: 0, y: 0, rotate: 0, scale: 1, opacity: 1, zIndex: 30 },
-      { x: 16, y: 8, rotate: 9, scale: 0.95, opacity: 1, zIndex: 20 },
-      { x: -18, y: 14, rotate: -11, scale: 0.88, opacity: 0.75, zIndex: 10 },
-      { x: 0, y: 70, rotate: 24, scale: 0.8, opacity: 0, zIndex: 0 },
+      { x: 16, y: 6, rotate: 9, scale: 0.95, opacity: 1, zIndex: 20 },
+      { x: -18, y: 10, rotate: -11, scale: 0.88, opacity: 0.75, zIndex: 10 },
+      { x: 0, y: 26, rotate: 24, scale: 0.8, opacity: 0, zIndex: 0 },
     ],
-    inTop: { x: 4, y: -40, rotate: -120, scale: 1.12, opacity: 0, zIndex: 30 },
-    outTop: { x: -4, y: -92, rotate: 140, scale: 1.08, opacity: 0, zIndex: 30 },
-    outBack: { x: -40, y: 56, rotate: -150, scale: 0.72, opacity: 0, zIndex: 0 },
+    inTop: { x: 4, y: -28, rotate: -120, scale: 1.12, opacity: 0, zIndex: 30 },
+    outTop: { x: -72, y: -6, rotate: 140, scale: 1.08, opacity: 0, zIndex: 30 },
+    outBack: { x: -40, y: 30, rotate: -150, scale: 0.72, opacity: 0, zIndex: 0 },
   },
 };
 
@@ -131,7 +131,7 @@ const PolaroidDeck = forwardRef<PolaroidDeckHandle, PolaroidDeckProps>(
 
     const geometry = GEOMETRY[effect];
     const transition: Transition = {
-      duration: reduceMotion ? 0 : 0.7,
+      duration: reduceMotion ? 0 : 0.6,
       ease: [0.22, 0.61, 0.36, 1],
     };
 
