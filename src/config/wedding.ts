@@ -7,7 +7,6 @@ import type { Settings } from "@/lib/settings";
  */
 export const DEFAULT_SETTINGS: Settings = {
   theme: "dusty-pink",
-  carouselEffect: "fan",
   couple: {
     first: "Censmar",
     second: "Eduardo",

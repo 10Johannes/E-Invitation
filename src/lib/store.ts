@@ -1,7 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { DEFAULT_SETTINGS } from "@/config/wedding";
-import { isCarouselEffect } from "@/lib/carousel";
 import { DEFAULT_THEME, isThemeId } from "@/lib/themes";
 import type { Settings } from "@/lib/settings";
 
@@ -85,9 +84,6 @@ function normalize(
     ...DEFAULT_SETTINGS,
     ...raw,
     theme: isThemeId(raw.theme) ? raw.theme : DEFAULT_THEME,
-    carouselEffect: isCarouselEffect(raw.carouselEffect)
-      ? raw.carouselEffect
-      : DEFAULT_SETTINGS.carouselEffect,
     guestPhotosShowNow:
       typeof raw.guestPhotosShowNow === "boolean"
         ? raw.guestPhotosShowNow

@@ -5,21 +5,13 @@ import Lightbox from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
-import PolaroidDeck from "./PolaroidDeck";
 import type { GalleryPhoto } from "@/lib/photos";
 import { ALBUMS, albumLabel, type AlbumId } from "@/lib/albums";
-import type { CarouselEffect } from "@/lib/carousel";
 
 type AlbumFilter = AlbumId | "all";
 
-export default function Gallery({
-  photos,
-  effect,
-}: {
-  photos: GalleryPhoto[];
-  effect: CarouselEffect;
-}) {
-  const [selected, setSelected] = useState(-1);
+export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
+  const [index, setIndex] = useState(-1);
   const [activeAlbum, setActiveAlbum] = useState<AlbumFilter>("all");
   const [activeGuest, setActiveGuest] = useState<string | null>(null);
 
@@ -64,30 +56,15 @@ export default function Gallery({
     [visible]
   );
 
-  const deckPhotos = useMemo(
-    () =>
-      visible.map((photo) => ({
-        id: photo.id,
-        url: photo.fullUrl,
-        caption: [
-          photo.guest ? `Shared by ${photo.guest}` : null,
-          albumLabel(photo.album),
-        ]
-          .filter(Boolean)
-          .join(" · "),
-      })),
-    [visible]
-  );
-
   function pickAlbum(album: AlbumFilter) {
     setActiveAlbum(album);
     setActiveGuest(null);
-    setSelected(-1);
+    setIndex(-1);
   }
 
   function pickGuest(name: string | null) {
     setActiveGuest(name);
-    setSelected(-1);
+    setIndex(-1);
   }
 
   const chipClass = (active: boolean) =>
@@ -99,7 +76,7 @@ export default function Gallery({
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
         <button
           type="button"
           onClick={() => pickAlbum("all")}
@@ -153,23 +130,30 @@ export default function Gallery({
         </div>
       )}
 
-      {deckPhotos.length === 0 ? (
-        <div className="glass rounded-3xl px-6 py-12 text-center text-sm text-charcoal/60">
-          No photos in this selection yet.
-        </div>
-      ) : (
-        <PolaroidDeck
-          key={`${activeAlbum}-${activeGuest ?? "all"}`}
-          photos={deckPhotos}
-          effect={effect}
-          onActivate={(_, i) => setSelected(i)}
-        />
-      )}
+      <div className="columns-2 gap-4 sm:columns-3">
+        {visible.map((photo, i) => (
+          <button
+            key={photo.id}
+            type="button"
+            onClick={() => setIndex(i)}
+            aria-label={`Open photo ${i + 1}${photo.guest ? ` shared by ${photo.guest}` : ""}`}
+            className="group mb-4 block w-full overflow-hidden rounded-2xl border border-white/50 shadow-lg shadow-wine/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deeprose"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={photo.thumbUrl}
+              alt={photo.guest ? `Photo shared by ${photo.guest}` : "Guest photo"}
+              loading="lazy"
+              className="w-full transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+          </button>
+        ))}
+      </div>
 
       <Lightbox
-        open={selected >= 0}
-        close={() => setSelected(-1)}
-        index={Math.max(selected, 0)}
+        open={index >= 0}
+        close={() => setIndex(-1)}
+        index={Math.max(index, 0)}
         slides={slides}
         plugins={[Captions]}
       />
