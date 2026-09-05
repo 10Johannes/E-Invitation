@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { isAdmin, requireAdmin } from "@/lib/auth";
-import { MAX_COUPLE_PHOTOS } from "@/lib/limits";
+import { MAX_COUPLE_PHOTOS, MAX_AUDIO_TRACKS } from "@/lib/limits";
 import { cloudinary, cloudinaryConfigured } from "@/lib/cloudinary";
 import { isAlbumId } from "@/lib/albums";
 import type { Settings, WeddingEvent } from "@/lib/settings";
@@ -76,7 +76,7 @@ export type ContentInput = {
   venue: { name: string; address: string; mapsUrl: string };
   events: WeddingEvent[];
   spotifyPlaylistUrl: string;
-  audioUrl: string;
+  audioUrls: string[];
   loveNote: string;
   dressCode: string;
   registryNote: string;
@@ -118,9 +118,20 @@ export async function saveContentAction(
     };
   }
 
-  const audioUrl = clean(input.audioUrl, 1000);
-  if (audioUrl && !/^https?:\/\//.test(audioUrl)) {
-    return { ok: false, error: "The audio URL must start with http(s)://" };
+  const audioUrls = (Array.isArray(input.audioUrls) ? input.audioUrls : [])
+    .map((url) => clean(url, 1000))
+    .filter(Boolean);
+  if (audioUrls.length > MAX_AUDIO_TRACKS) {
+    return {
+      ok: false,
+      error: `You can keep up to ${MAX_AUDIO_TRACKS} background music tracks.`,
+    };
+  }
+  if (audioUrls.some((url) => !/^https?:\/\//.test(url))) {
+    return {
+      ok: false,
+      error: "Every music track must start with http(s)://",
+    };
   }
 
   const registryUrl = clean(input.registryUrl, 500);
@@ -176,7 +187,7 @@ export async function saveContentAction(
     },
     events: cleanedEvents,
     spotifyPlaylistUrl: spotify,
-    audioUrl,
+    audioUrls,
     loveNote: clean(input.loveNote, 400),
     dressCode: clean(input.dressCode, 160),
     registryNote: clean(input.registryNote, 300),

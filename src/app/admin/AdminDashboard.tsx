@@ -302,6 +302,24 @@ function ContentTab({
     setForm((prev) => ({ ...prev, church: { ...prev.church, ...patch } }));
   }
 
+  function updateAudioUrl(index: number, value: string) {
+    setForm((prev) => ({
+      ...prev,
+      audioUrls: prev.audioUrls.map((url, i) => (i === index ? value : url)),
+    }));
+  }
+
+  function addAudioUrl() {
+    setForm((prev) => ({ ...prev, audioUrls: [...prev.audioUrls, ""] }));
+  }
+
+  function removeAudioUrl(index: number) {
+    setForm((prev) => ({
+      ...prev,
+      audioUrls: prev.audioUrls.filter((_, i) => i !== index),
+    }));
+  }
+
   function updateEvent(index: number, patch: Partial<WeddingEvent>) {
     setForm((prev) => ({
       ...prev,
@@ -452,15 +470,36 @@ function ContentTab({
         </Field>
 
         <Field
-          label="Background music URL"
-          hint="Direct link to a hosted audio file (.mp3). When set, this plays on envelope open instead of the Spotify embed."
+          label={`Background music ${form.audioUrls.length > 0 ? `(${form.audioUrls.length})` : ""}`}
+          hint="Direct links to publicly hosted audio files (.mp3/.ogg/.m4a) — not webpages or streaming links. Tracks play in order and loop continuously on envelope open instead of the Spotify embed."
         >
-          <input
-            value={form.audioUrl}
-            onChange={(e) => update({ audioUrl: e.target.value })}
-            placeholder="https://…/track.mp3"
-            className={inputClass}
-          />
+          <div className="mt-1.5 flex flex-col gap-2">
+            {form.audioUrls.map((url, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <input
+                  value={url}
+                  onChange={(e) => updateAudioUrl(index, e.target.value)}
+                  placeholder={`Track ${index + 1} — https://…/track.mp3`}
+                  className={inputClass}
+                />
+                <button
+                  type="button"
+                  aria-label={`Remove track ${index + 1}`}
+                  onClick={() => removeAudioUrl(index)}
+                  className="shrink-0 rounded-xl border border-charcoal/10 bg-charcoal/5 px-3 py-2.5 text-sm text-charcoal/60 transition hover:bg-charcoal/10 hover:text-charcoal"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addAudioUrl}
+              className="shrink-0 self-start rounded-xl border border-dashed border-charcoal/25 px-3.5 py-2 text-sm text-wine/80 transition hover:border-deeprose hover:bg-charcoal/5"
+            >
+              + Add another track
+            </button>
+          </div>
         </Field>
 
         <Field

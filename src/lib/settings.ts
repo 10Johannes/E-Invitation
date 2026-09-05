@@ -39,7 +39,7 @@ export type Settings = {
   };
   events: WeddingEvent[];
   spotifyPlaylistUrl: string;
-  audioUrl: string;
+  audioUrls: string[];
   guestPhotosShowNow: boolean;
   hiddenGuestPhotos: string[];
   heroPhotos: CouplePhoto[];

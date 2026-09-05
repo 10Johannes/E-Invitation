@@ -75,7 +75,9 @@ async function fileSet(settings: Settings): Promise<void> {
   await fs.writeFile(FILE_PATH, JSON.stringify(settings, null, 2), "utf8");
 }
 
-function normalize(raw: Partial<Settings> | null): Settings {
+function normalize(
+  raw: (Partial<Settings> & { audioUrl?: unknown }) | null
+): Settings {
   if (!raw) return { ...DEFAULT_SETTINGS };
 
   return {
@@ -91,6 +93,14 @@ function normalize(raw: Partial<Settings> | null): Settings {
           (id): id is string => typeof id === "string" && id.length > 0
         )
       : [],
+    // Legacy single-URL setting (audioUrl) migrates into the first track.
+    audioUrls: Array.isArray(raw.audioUrls)
+      ? raw.audioUrls.filter(
+          (url): url is string => typeof url === "string" && url.length > 0
+        )
+      : typeof raw.audioUrl === "string" && raw.audioUrl
+        ? [raw.audioUrl]
+        : [],
     couple: { ...DEFAULT_SETTINGS.couple, ...raw.couple },
     church: { ...DEFAULT_SETTINGS.church, ...raw.church },
     venue: { ...DEFAULT_SETTINGS.venue, ...raw.venue },

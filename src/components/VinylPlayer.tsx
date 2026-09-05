@@ -48,50 +48,101 @@ function loadSpotifyIframeApi(): Promise<SpotifyIFrameAPI> {
 
 type VinylPlayerProps = {
   playlistUrl: string;
-  audioUrl: string;
+  audioUrls: string[];
   first: string;
   second: string;
 };
 
 const EQ_DELAYS = ["0s", "0.15s", "0.3s", "0.45s", "0.6s"];
 
+function isNotAllowedError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    (error as { name?: unknown }).name === "NotAllowedError"
+  );
+}
+
 export default function VinylPlayer({
   playlistUrl,
-  audioUrl,
+  audioUrls,
   first,
   second,
 }: VinylPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [nudged, setNudged] = useState(false);
+  const [audioFailed, setAudioFailed] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const trackIndexRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<SpotifyController | null>(null);
   const wantPlayRef = useRef(false);
 
   const playlistId = playlistUrl.match(/playlist\/([A-Za-z0-9]+)/)?.[1];
-  const hasAudio = Boolean(audioUrl);
+  const tracks = audioUrls.filter((url) => Boolean(url.trim()));
+  const hasAudio = tracks.length > 0;
+
+  // Which engine actually drives playback. Falls back to Spotify when the
+  // audio file errors out, but keeps retrying the file when there is no
+  // playlist to fall back to.
+  const source: "audio" | "spotify" | "none" =
+    hasAudio && (!audioFailed || !playlistId)
+      ? "audio"
+      : playlistId
+        ? "spotify"
+        : "none";
 
   // --- Native <audio> path (preferred: reliable autoplay) ---
   useEffect(() => {
-    if (!hasAudio || !audioRef.current) return;
+    if (!hasAudio) return;
+    const urls = audioUrls.filter((url) => Boolean(url.trim()));
+    setAudioFailed(false);
     const audio = audioRef.current;
+    if (!audio || urls.length === 0) return;
     audio.preload = "auto";
+    trackIndexRef.current = 0;
+    // Set the src imperatively once at mount so React's re-renders never
+    // fight the "advance to next track" mutation in onEnded below.
+    audio.src = urls[0];
     const onPlay = () => {
       setPlaying(true);
       setNudged(true);
     };
     const onPause = () => setPlaying(false);
+    const markFailed = () => {
+      console.warn("[VinylPlayer] audio failed to load", urls);
+      setPlaying(false);
+      setAudioFailed(true);
+    };
+    const onEnded = () => {
+      const next = (trackIndexRef.current + 1) % urls.length;
+      trackIndexRef.current = next;
+      // Changing src re-runs the load algorithm, so a single track still
+      // loops via advance → same URL.
+      audio.src = urls[next];
+      audio.play().catch(() => {
+        // If the continued playback is blocked, the visible play button is
+        // the reliable gesture.
+      });
+    };
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
+    audio.addEventListener("error", markFailed);
+    audio.addEventListener("abort", markFailed);
+    audio.addEventListener("ended", onEnded);
     return () => {
       audio.removeEventListener("play", onPlay);
       audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("error", markFailed);
+      audio.removeEventListener("abort", markFailed);
+      audio.removeEventListener("ended", onEnded);
     };
-  }, [hasAudio, audioUrl]);
+  }, [hasAudio, audioUrls]);
 
   // --- Spotify Iframe API path (fallback when no audio file) ---
   useEffect(() => {
-    if (!playlistId || hasAudio) return;
+    if (source !== "spotify") return;
     let disposed = false;
 
     loadSpotifyIframeApi().then((api) => {
@@ -122,23 +173,51 @@ export default function VinylPlayer({
       controllerRef.current?.destroy?.();
       controllerRef.current = null;
     };
-  }, [playlistId, hasAudio]);
+  }, [playlistId, source]);
 
   // --- Start playback on envelope open ---
   useEffect(() => {
+    function playAudioWithRetry() {
+      const audio = audioRef.current;
+      if (!audio) return;
+      let stopped = false;
+      let interval = 0;
+      const stop = () => {
+        stopped = true;
+        window.clearInterval(interval);
+      };
+      const attempt = () => {
+        if (stopped) return;
+        // Play directly inside the click-gesture task; native audio accepts
+        // this far more reliably than the Spotify iframe bridge. Retry for a
+        // short window in case the metadata was still buffering.
+        audio.play().catch((error) => {
+          if (stopped) return;
+          // Gesture-blocked play is expected on some browsers — the visible
+          // play button is the reliable gesture, so don't treat it as failure.
+          if (isNotAllowedError(error)) return;
+          if (playlistId) setAudioFailed(true);
+        });
+      };
+      attempt();
+      interval = window.setInterval(attempt, 150);
+      audio.addEventListener("playing", stop, { once: true });
+      audio.addEventListener("pause", stop, { once: true });
+      window.setTimeout(stop, 1500);
+    }
+
     function onOpen() {
       wantPlayRef.current = true;
       setNudged(true);
-      const audio = audioRef.current;
-      if (hasAudio && audio) {
-        // Play directly inside the click-gesture task; native audio accepts
-        // this far more reliably than the Spotify iframe bridge.
-        audio.play().catch(() => {
-          // Autoplay blocked — the visible play button is a valid gesture.
-        });
+      if (source === "audio") {
+        playAudioWithRetry();
         return;
       }
+      if (source !== "spotify") return;
       controllerRef.current?.play();
+      // The Spotify controller may still be initializing at the moment of the
+      // click. Retry for a short window so the play call lands while the
+      // browser still counts it as a user-initiated gesture.
       const interval = window.setInterval(() => {
         if (controllerRef.current) {
           controllerRef.current.play();
@@ -149,11 +228,11 @@ export default function VinylPlayer({
     }
     window.addEventListener("invite:open", onOpen);
     return () => window.removeEventListener("invite:open", onOpen);
-  }, [hasAudio]);
+  }, [source, playlistId]);
 
   function toggle() {
     const audio = audioRef.current;
-    if (hasAudio && audio) {
+    if (source === "audio" && audio) {
       if (audio.paused) {
         audio.play().catch(() => {});
       } else {
@@ -280,34 +359,43 @@ export default function VinylPlayer({
               {playing ? "❚❚" : "▶"}
             </button>
 
-            {!hasAudio && (
+            {hasAudio && audioFailed ? (
+              <p className="text-xs text-charcoal/60">
+                {playlistId
+                  ? "The music file had trouble loading — playing Spotify instead."
+                  : "The music file had trouble loading — tap play to retry."}
+              </p>
+            ) : !hasAudio ? (
               <p className="text-xs text-charcoal/60">
                 Full tracks need a free Spotify login.
               </p>
-            )}
+            ) : null}
           </div>
         </div>
 
-        {hasAudio ? (
+        {source === "audio" ? (
           <audio
             ref={audioRef}
-            src={audioUrl}
             preload="auto"
-            loop
             className="hidden"
           />
         ) : (
           <motion.div
             initial={false}
             animate={{
-              height: playing ? "auto" : 0,
+              height: playing ? 152 : 0,
               opacity: playing ? 1 : 0,
               marginTop: playing ? 24 : 0,
             }}
             transition={{ duration: 0.45, ease: "easeInOut" }}
             className="overflow-hidden"
+            aria-hidden={!playing}
           >
-            <div ref={containerRef} />
+            {/* The embed must keep a real layout size so the Spotify iframe
+                initializes and accepts play(); only the outer box collapses. */}
+            <div className="h-[152px]">
+              <div ref={containerRef} />
+            </div>
           </motion.div>
         )}
       </div>

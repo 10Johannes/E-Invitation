@@ -42,7 +42,7 @@ export const DEFAULT_SETTINGS: Settings = {
     },
   ],
   spotifyPlaylistUrl: "",
-  audioUrl: "",
+  audioUrls: [],
   guestPhotosShowNow: true,
   hiddenGuestPhotos: [],
   heroPhotos: [],
