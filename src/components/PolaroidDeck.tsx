@@ -4,15 +4,14 @@ import {
   AnimatePresence,
   motion,
   useReducedMotion,
+  type TargetAndTransition,
   type Transition,
-  type Variants,
 } from "framer-motion";
 import {
   forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
-  useRef,
   useState,
 } from "react";
 import PolaroidCard from "./PolaroidCard";
@@ -34,67 +33,57 @@ export type PolaroidDeckHandle = {
 
 const AUTOPLAY_MS = 5500;
 
-const BEHIND_SLOTS: Record<number, string> = {
-  0: "pointer-events-none -translate-x-3 translate-y-2 scale-[0.94]",
-  1: "pointer-events-none translate-x-3 -translate-y-1 scale-[0.9]",
+/**
+ * Every card on stage is a persistent motion element keyed by photo id.
+ * Navigating only changes *which slot each card targets*, so framer glides
+ * the same DOM node between slots — the tucked-back card literally rises to
+ * the front and the front card deals away. Slot ordering, front to back:
+ *   0 TOP · 1 P1 · 2 P2 · 3 HOLD (invisible warmer that preloads the next shot)
+ */
+type EffectGeometry = {
+  rest: TargetAndTransition[];
+  inTop: TargetAndTransition;
+  outTop: TargetAndTransition;
+  outBack: TargetAndTransition;
 };
 
-const BEHIND_ROTATIONS: Record<number, number> = { 0: -4, 1: 6 };
-const BEHIND_BLUR: Record<number, string> = { 0: "", 1: "blur-[1px]" };
+const P = { transformPerspective: 900 };
 
-function buildVariants(reduceMotion: boolean, effect: CarouselEffect): Variants {
-  if (reduceMotion) {
-    return {
-      enter: { opacity: 0 },
-      center: { opacity: 1 },
-      exit: { opacity: 0 },
-    };
-  }
-  switch (effect) {
-    case "fan":
-      return {
-        enter: (dir: number) => ({
-          opacity: 0,
-          x: dir * 110,
-          rotate: dir * 12,
-        }),
-        center: { opacity: 1, x: 0, rotate: 0 },
-        exit: (dir: number) => ({
-          opacity: 0,
-          x: dir * -90,
-          rotate: dir * -10,
-        }),
-      };
-    case "flip":
-      return {
-        enter: (dir: number) => ({
-          opacity: 0,
-          rotateY: dir * 85,
-          scale: 0.92,
-          transformPerspective: 900,
-        }),
-        center: { opacity: 1, rotateY: 0, scale: 1 },
-        exit: (dir: number) => ({
-          opacity: 0,
-          rotateY: dir * -85,
-          scale: 0.92,
-          transformPerspective: 900,
-        }),
-      };
-    case "swirl":
-      return {
-        enter: () => ({ opacity: 0, rotate: 26, scale: 0.65 }),
-        center: { opacity: 1, rotate: 0, scale: 1 },
-        exit: () => ({ opacity: 0, rotate: -22, scale: 0.65 }),
-      };
-    default:
-      return {
-        enter: { opacity: 0 },
-        center: { opacity: 1 },
-        exit: { opacity: 0 },
-      };
-  }
-}
+const GEOMETRY: Record<CarouselEffect, EffectGeometry> = {
+  fan: {
+    rest: [
+      { x: 0, y: 0, rotate: 0, scale: 1, opacity: 1, zIndex: 30 },
+      { x: 18, y: 8, rotate: 6, scale: 0.94, opacity: 1, zIndex: 20 },
+      { x: -20, y: 14, rotate: -7, scale: 0.87, opacity: 0.75, zIndex: 10 },
+      { x: 0, y: 70, rotate: 0, scale: 0.8, opacity: 0, zIndex: 0 },
+    ],
+    inTop: { x: 6, y: -52, rotate: 8, scale: 1.16, opacity: 0, zIndex: 30 },
+    outTop: { x: -8, y: -96, rotate: -6, scale: 1.06, opacity: 0, zIndex: 30 },
+    outBack: { x: -44, y: 56, rotate: -9, scale: 0.72, opacity: 0, zIndex: 0 },
+  },
+  flip: {
+    rest: [
+      { x: 0, y: 0, rotateY: 0, scale: 1, opacity: 1, zIndex: 30, ...P },
+      { x: 14, y: 8, rotateY: 25, scale: 0.94, opacity: 1, zIndex: 20, ...P },
+      { x: -16, y: 14, rotateY: -35, scale: 0.9, opacity: 0.75, zIndex: 10, ...P },
+      { x: 0, y: 70, rotateY: 40, scale: 0.8, opacity: 0, zIndex: 0, ...P },
+    ],
+    inTop: { x: 4, y: -52, rotateY: -70, scale: 1.1, opacity: 0, zIndex: 30, ...P },
+    outTop: { x: -6, y: -96, rotateY: 70, scale: 1.05, opacity: 0, zIndex: 30, ...P },
+    outBack: { x: -40, y: 56, rotateY: -60, scale: 0.72, opacity: 0, zIndex: 0, ...P },
+  },
+  swirl: {
+    rest: [
+      { x: 0, y: 0, rotate: 0, scale: 1, opacity: 1, zIndex: 30 },
+      { x: 16, y: 8, rotate: 9, scale: 0.95, opacity: 1, zIndex: 20 },
+      { x: -18, y: 14, rotate: -11, scale: 0.88, opacity: 0.75, zIndex: 10 },
+      { x: 0, y: 70, rotate: 24, scale: 0.8, opacity: 0, zIndex: 0 },
+    ],
+    inTop: { x: 4, y: -40, rotate: -120, scale: 1.12, opacity: 0, zIndex: 30 },
+    outTop: { x: -4, y: -92, rotate: 140, scale: 1.08, opacity: 0, zIndex: 30 },
+    outBack: { x: -40, y: 56, rotate: -150, scale: 0.72, opacity: 0, zIndex: 0 },
+  },
+};
 
 const PolaroidDeck = forwardRef<PolaroidDeckHandle, PolaroidDeckProps>(
   function PolaroidDeck(
@@ -103,7 +92,6 @@ const PolaroidDeck = forwardRef<PolaroidDeckHandle, PolaroidDeckProps>(
   ) {
     const reduceMotion = useReducedMotion();
     const [index, setIndex] = useState(0);
-    const direction = useRef<1 | -1>(1);
 
     useEffect(() => {
       if (index >= photos.length) setIndex(0);
@@ -112,7 +100,6 @@ const PolaroidDeck = forwardRef<PolaroidDeckHandle, PolaroidDeckProps>(
     const go = useCallback(
       (dir: 1 | -1) => {
         if (photos.length < 2) return;
-        direction.current = dir;
         setIndex((current) =>
           (current + dir + photos.length) % photos.length
         );
@@ -126,8 +113,6 @@ const PolaroidDeck = forwardRef<PolaroidDeckHandle, PolaroidDeckProps>(
         setIndex((current) => {
           const normalized =
             ((target % photos.length) + photos.length) % photos.length;
-          direction.current =
-            normalized === current ? 1 : normalized > current ? 1 : -1;
           return normalized;
         });
       },
@@ -144,119 +129,152 @@ const PolaroidDeck = forwardRef<PolaroidDeckHandle, PolaroidDeckProps>(
 
     if (photos.length === 0) return null;
 
-    const currentIndex = Math.min(index, photos.length - 1);
-    const current = photos[currentIndex];
-    const behindCount = Math.min(2, photos.length - 1);
-    const behind = Array.from({ length: behindCount }, (_, slot) =>
-      photos[(currentIndex + slot + 1) % photos.length]
-    );
-
-    const variants = buildVariants(Boolean(reduceMotion), effect);
+    const geometry = GEOMETRY[effect];
     const transition: Transition = {
-      duration: reduceMotion ? 0 : 0.75,
+      duration: reduceMotion ? 0 : 0.7,
       ease: [0.22, 0.61, 0.36, 1],
     };
+
+    if (photos.length === 1) {
+      const photo = photos[0];
+      return (
+        <div className={`relative flex flex-col items-center gap-5 ${className}`}>
+          <div className="relative w-40 sm:w-56 lg:w-64">
+            {onActivate ? (
+              <button
+                type="button"
+                onClick={() => onActivate(photo, 0)}
+                aria-label={photo.caption ?? "Open the photo larger"}
+                className="block w-full rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-deeprose"
+              >
+                <PolaroidCard
+                  src={photo.url}
+                  alt={photo.caption ?? "Photo 1"}
+                  caption={photo.caption}
+                  priority
+                  className="w-full"
+                />
+              </button>
+            ) : (
+              <PolaroidCard
+                src={photo.url}
+                alt={photo.caption ?? "Photo 1"}
+                caption={photo.caption}
+                priority
+                className="w-full"
+              />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const currentIndex = Math.min(index, photos.length - 1);
+    const wrap = (offset: number) =>
+      (((currentIndex + offset) % photos.length) + photos.length) %
+      photos.length;
+
+    const tuple: string[] = [];
+    for (let offset = 0; offset < 4; offset++) {
+      const id = photos[wrap(offset)].id;
+      if (!tuple.includes(id)) tuple.push(id);
+    }
+    const photoById = new Map(photos.map((photo) => [photo.id, photo]));
+
+    const cardClass =
+      "block w-full rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-deeprose";
 
     return (
       <div className={`relative flex flex-col items-center gap-5 ${className}`}>
         <div className="relative w-40 sm:w-56 lg:w-64">
-          {behind.map((photo, slot) => (
-            <div
-              key={photo.id}
-              aria-hidden
-              className={`absolute inset-0 grid place-items-center ${BEHIND_SLOTS[slot]} ${
-                behind.length === 2 && slot === 1 ? "opacity-80" : "opacity-90"
-              }`}
-            >
-              <PolaroidCard
-                src={photo.url}
-                alt=""
-                rotation={BEHIND_ROTATIONS[slot] ?? 0}
-                className={`w-full ${BEHIND_BLUR[slot] ?? ""}`}
-              />
-            </div>
-          ))}
-
-          <AnimatePresence custom={direction.current} initial={false}>
-            <motion.div
-              key={current.id}
-              custom={direction.current}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={transition}
-              className="relative grid place-items-center"
-            >
-              {onActivate ? (
-                <button
-                  type="button"
-                  onClick={() => onActivate(current, currentIndex)}
-                  aria-label={`Open photo ${currentIndex + 1}${
-                    current.caption ? ` — ${current.caption}` : ""
-                  } in a lightbox`}
-                  className="block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-deeprose rounded-lg"
+          <AnimatePresence>
+            {tuple.map((id, slot) => {
+              const photo = photoById.get(id)!;
+              const target = geometry.rest[slot];
+              const isTop = slot === 0;
+              return (
+                <motion.div
+                  key={id}
+                  className={
+                    isTop
+                      ? "relative grid"
+                      : "pointer-events-none absolute inset-0 grid place-items-center"
+                  }
+                  initial={isTop ? geometry.inTop : target}
+                  animate={target}
+                  exit={isTop ? geometry.outTop : geometry.outBack}
+                  transition={transition}
+                  style={{ zIndex: target.zIndex ?? 0 }}
                 >
-                  <PolaroidCard
-                    src={current.url}
-                    alt={current.caption ?? `Photo ${currentIndex + 1}`}
-                    caption={current.caption}
-                    priority={currentIndex === 0}
-                    className="w-full"
-                  />
-                </button>
-              ) : (
-                <PolaroidCard
-                  src={current.url}
-                  alt={current.caption ?? `Photo ${currentIndex + 1}`}
-                  caption={current.caption}
-                  priority={currentIndex === 0}
-                  className="w-full"
-                />
-              )}
-            </motion.div>
+                  {isTop ? (
+                    onActivate ? (
+                      <button
+                        type="button"
+                        onClick={() => onActivate(photo, currentIndex)}
+                        aria-label={`Open photo ${currentIndex + 1}${
+                          photo.caption ? ` — ${photo.caption}` : ""
+                        } in a lightbox`}
+                        className={cardClass}
+                      >
+                        <PolaroidCard
+                          src={photo.url}
+                          alt={photo.caption ?? `Photo ${currentIndex + 1}`}
+                          caption={photo.caption}
+                          priority
+                          className="w-full"
+                        />
+                      </button>
+                    ) : (
+                      <PolaroidCard
+                        src={photo.url}
+                        alt={photo.caption ?? `Photo ${currentIndex + 1}`}
+                        caption={photo.caption}
+                        priority
+                        className="w-full"
+                      />
+                    )
+                  ) : (
+                    <PolaroidCard src={photo.url} alt="" className="w-full" />
+                  )}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
 
-          {photos.length > 1 && (
-            <>
-              <button
-                type="button"
-                aria-label="Previous photo"
-                onClick={() => go(-1)}
-                className="glass absolute -left-11 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-lg text-wine transition hover:bg-charcoal/5 sm:-left-14"
-              >
-                ‹
-              </button>
-              <button
-                type="button"
-                aria-label="Next photo"
-                onClick={() => go(1)}
-                className="glass absolute -right-11 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-lg text-wine transition hover:bg-charcoal/5 sm:-right-14"
-              >
-                ›
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            aria-label="Previous photo"
+            onClick={() => go(-1)}
+            className="glass absolute -left-11 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-lg text-wine transition hover:bg-charcoal/5 sm:-left-14"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            aria-label="Next photo"
+            onClick={() => go(1)}
+            className="glass absolute -right-11 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-lg text-wine transition hover:bg-charcoal/5 sm:-right-14"
+          >
+            ›
+          </button>
         </div>
 
-        {photos.length > 1 && (
-          <div className="flex items-center gap-2.5">
-            {photos.map((photo, i) => (
-              <button
-                key={photo.id}
-                type="button"
-                aria-label={`Show photo ${i + 1}`}
-                onClick={() => goTo(i)}
-                aria-current={i === currentIndex}
-                className={`h-1.5 rounded-full transition-all duration-500 ${
-                  i === currentIndex
-                    ? "w-7 bg-[var(--t-panel)]"
-                    : "w-1.5 bg-[var(--t-panel)]/50 hover:bg-[var(--t-panel)]/80"
-                }`}
-              />
-            ))}
-          </div>
-        )}
+        <div className="flex items-center gap-2.5">
+          {photos.map((photo, i) => (
+            <button
+              key={photo.id}
+              type="button"
+              aria-label={`Show photo ${i + 1}`}
+              onClick={() => goTo(i)}
+              aria-current={i === currentIndex}
+              className={`h-1.5 rounded-full transition-all duration-500 ${
+                i === currentIndex
+                  ? "w-7 bg-[var(--t-panel)]"
+                  : "w-1.5 bg-[var(--t-panel)]/50 hover:bg-[var(--t-panel)]/80"
+              }`}
+            />
+          ))}
+        </div>
       </div>
     );
   }

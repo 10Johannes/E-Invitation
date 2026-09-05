@@ -39,11 +39,9 @@ export default function PolaroidCard({
           className="h-full w-full object-cover"
         />
       </div>
-      {caption && (
-        <p className="mt-2 max-w-full truncate text-center font-script text-lg leading-none text-charcoal sm:text-xl">
-          {caption}
-        </p>
-      )}
+      <p className="mt-2 h-[1.25em] max-w-full truncate text-center font-script text-lg leading-none text-charcoal sm:text-xl">
+        {caption ?? ""}
+      </p>
     </div>
   );
 }
