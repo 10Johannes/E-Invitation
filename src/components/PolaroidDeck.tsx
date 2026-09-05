@@ -54,8 +54,8 @@ const GEOMETRY: Record<CarouselEffect, EffectGeometry> = {
     rest: [
       { x: 0, y: 0, rotate: 0, scale: 1, opacity: 1, zIndex: 30 },
       { x: 18, y: 6, rotate: 6, scale: 0.94, opacity: 1, zIndex: 20 },
-      { x: -20, y: 10, rotate: -7, scale: 0.87, opacity: 0.75, zIndex: 10 },
-      { x: 0, y: 26, rotate: 0, scale: 0.8, opacity: 0, zIndex: 0 },
+      { x: -20, y: 10, rotate: -7, scale: 0.87, opacity: 0.7, zIndex: 10 },
+      { x: 0, y: 28, rotate: 0, scale: 0.8, opacity: 0, zIndex: 0 },
     ],
     inTop: { x: 6, y: -30, rotate: 8, scale: 1.16, opacity: 0, zIndex: 30 },
     outTop: { x: -76, y: -8, rotate: -6, scale: 1.06, opacity: 0, zIndex: 40 },
@@ -65,8 +65,8 @@ const GEOMETRY: Record<CarouselEffect, EffectGeometry> = {
     rest: [
       { x: 0, y: 0, rotateY: 0, scale: 1, opacity: 1, zIndex: 30, ...P },
       { x: 14, y: 6, rotateY: 15, scale: 0.95, opacity: 1, zIndex: 20, ...P },
-      { x: -16, y: 10, rotateY: -20, scale: 0.9, opacity: 0.75, zIndex: 10, ...P },
-      { x: 0, y: 26, rotateY: 22, scale: 0.8, opacity: 0, zIndex: 0, ...P },
+      { x: -16, y: 10, rotateY: -20, scale: 0.9, opacity: 0.7, zIndex: 10, ...P },
+      { x: 0, y: 28, rotateY: 22, scale: 0.8, opacity: 0, zIndex: 0, ...P },
     ],
     inTop: { x: 4, y: -28, rotateY: -38, scale: 1.06, opacity: 0, zIndex: 30, ...P },
     outTop: { x: -70, y: -6, rotateY: 44, scale: 1.04, opacity: 0, zIndex: 40, ...P },
@@ -76,8 +76,8 @@ const GEOMETRY: Record<CarouselEffect, EffectGeometry> = {
     rest: [
       { x: 0, y: 0, rotate: 0, scale: 1, opacity: 1, zIndex: 30 },
       { x: 16, y: 6, rotate: 9, scale: 0.95, opacity: 1, zIndex: 20 },
-      { x: -18, y: 10, rotate: -11, scale: 0.88, opacity: 0.75, zIndex: 10 },
-      { x: 0, y: 26, rotate: 24, scale: 0.8, opacity: 0, zIndex: 0 },
+      { x: -18, y: 10, rotate: -11, scale: 0.88, opacity: 0.7, zIndex: 10 },
+      { x: 0, y: 28, rotate: 24, scale: 0.8, opacity: 0, zIndex: 0 },
     ],
     inTop: { x: 4, y: -28, rotate: -120, scale: 1.12, opacity: 0, zIndex: 30 },
     outTop: { x: -72, y: -6, rotate: 140, scale: 1.08, opacity: 0, zIndex: 40 },
@@ -139,7 +139,7 @@ const PolaroidDeck = forwardRef<PolaroidDeckHandle, PolaroidDeckProps>(
       const photo = photos[0];
       return (
         <div className={`relative flex flex-col items-center gap-5 ${className}`}>
-          <div className="relative w-40 sm:w-56 lg:w-64">
+<div className="relative w-40 sm:w-56 lg:w-64">
             {onActivate ? (
               <button
                 type="button"
@@ -186,7 +186,7 @@ const PolaroidDeck = forwardRef<PolaroidDeckHandle, PolaroidDeckProps>(
 
     return (
       <div className={`relative flex flex-col items-center gap-5 ${className}`}>
-        <div className="relative w-40 sm:w-56 lg:w-64">
+        <div className="relative grid grid-cols-1 grid-rows-1 w-40 sm:w-56 lg:w-64">
           <AnimatePresence>
             {tuple.map((id, slot) => {
               const photo = photoById.get(id)!;
@@ -197,8 +197,8 @@ const PolaroidDeck = forwardRef<PolaroidDeckHandle, PolaroidDeckProps>(
                   key={id}
                   className={
                     isTop
-                      ? "relative grid"
-                      : "pointer-events-none absolute inset-0 grid place-items-center"
+? "relative grid col-start-1 row-start-1"
+                    : "pointer-events-none absolute inset-0 grid place-items-center"
                   }
                   initial={isTop ? geometry.inTop : target}
                   animate={target}
