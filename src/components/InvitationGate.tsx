@@ -26,9 +26,14 @@ export default function InvitationGate({
   const [stage, setStage] = useState<Stage>("sealed");
   const timeouts = useRef<number[]>([]);
 
-  // Returning visitors: remove the gate before first paint (no exit animation).
+  // Returning visitors (and the printed RSVP QR's ?open=1 bypass): remove
+  // the gate before first paint (no exit animation).
   useIsoLayoutEffect(() => {
-    if (inviteAlreadyOpened()) {
+    const bypass =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("open") === "1";
+    if (inviteAlreadyOpened() || bypass) {
+      if (bypass) markInviteOpened();
       setOpen(true);
       return;
     }
@@ -44,6 +49,20 @@ export default function InvitationGate({
       pending.forEach((id) => window.clearTimeout(id));
     };
   }, []);
+
+  // When arriving via the RSVP QR (or a #rsvp deep link), jump to the form
+  // once the gate is open so the browser's suppressed anchor scroll is honored.
+  useEffect(() => {
+    if (!open) return;
+    if (!window.location.hash.startsWith("#rsvp")) return;
+    const id = window.setTimeout(() => {
+      document.getElementById("rsvp")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [open]);
 
   function handleOpen() {
     markInviteOpened();

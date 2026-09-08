@@ -1,24 +1,24 @@
 import type { Metadata } from "next";
 import PrintButton from "@/components/PrintButton";
-import QrPostcard from "./QrPostcard";
+import QrRsvpPostcard from "./QrRsvpPostcard";
 import { getSettings } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "QR Postcard · Share Your Photos",
+  title: "RSVP Postcard · Respond to Our Invitation",
   description:
-    "Printable A6 postcard for the reception tables — guests scan to share their photos.",
+    "Printable A6 postcard — guests scan the code to open their invitation and RSVP.",
 };
 
-export default async function QrCardPage() {
+export default async function QrRsvpCardPage() {
   const settings = await getSettings();
 
   return (
     <main className="flex min-h-svh flex-col items-center gap-8 px-4 py-12">
       <div className="text-center no-print">
         <h1 className="font-serif text-3xl italic text-gradient">
-          QR Table Postcard
+          RSVP Table Postcard
         </h1>
         <p className="mt-2 max-w-sm text-sm leading-relaxed text-charcoal/70">
           Prints at exactly A6 landscape (148 × 105 mm). In your browser&apos;s
@@ -27,7 +27,7 @@ export default async function QrCardPage() {
         </p>
       </div>
 
-      <QrPostcard
+      <QrRsvpPostcard
         brideFullName={settings.couple.brideFullName}
         groomFullName={settings.couple.groomFullName}
         first={settings.couple.first}
