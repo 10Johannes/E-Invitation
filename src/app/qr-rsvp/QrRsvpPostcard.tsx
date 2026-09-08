@@ -20,6 +20,7 @@ export default function QrRsvpPostcard({
   dateISO,
 }: QrRsvpPostcardProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [rsvpUrl, setRsvpUrl] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -28,11 +29,12 @@ export default function QrRsvpPostcard({
         typeof window !== "undefined"
           ? window.location.origin
           : "";
+      setRsvpUrl(origin + "/rsvp");
       const QRCode = (await import("qrcode")).default;
       const styles = getComputedStyle(document.documentElement);
       const dark = styles.getPropertyValue("--t-heading").trim() || "#6e434d";
       const light = styles.getPropertyValue("--t-panel").trim() || "#f8f2f0";
-      const url = await QRCode.toDataURL(`${origin}/?open=1#rsvp`, {
+      const url = await QRCode.toDataURL(`${origin}/rsvp`, {
         errorCorrectionLevel: "H",
         margin: 1,
         width: 560,
@@ -86,15 +88,17 @@ export default function QrRsvpPostcard({
             Kindly respond at your earliest convenience
           </p>
           <p className="mt-1 max-w-[52mm] text-[7.5pt] leading-snug text-charcoal/70">
-            Point your camera at the code to open your invitation and share
-            your RSVP with us.
+            Point your camera at the code to respond to your invitation.
+          </p>
+          <p className="mt-1.5 break-all text-[7pt] tracking-wide text-charcoal/60">
+            {rsvpUrl ? rsvpUrl.replace(/^https?:\/\//, "") : "\u00A0"}
           </p>
         </div>
 
         <div className="-rotate-1 rounded-lg bg-white p-[3mm] shadow-md">
           {qrDataUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={qrDataUrl} alt="QR code linking to the RSVP form" className="block h-[36mm] w-[36mm]" />
+            <img src={qrDataUrl} alt="QR code linking to the RSVP page" className="block h-[36mm] w-[36mm]" />
           ) : (
             <div className="h-[36mm] w-[36mm] animate-pulse rounded bg-black/5" />
           )}
