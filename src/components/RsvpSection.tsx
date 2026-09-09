@@ -18,7 +18,6 @@ export default function RsvpSection({ first, second }: RsvpSectionProps) {
     const payload = {
       name: String(formData.get("name") || ""),
       attending: formData.get("attending") === "no" ? "no" : "yes",
-      guests: Number(formData.get("guests") || 1),
       message: String(formData.get("message") || ""),
       website: String(formData.get("website") || ""),
     };
@@ -124,25 +123,6 @@ export default function RsvpSection({ first, second }: RsvpSectionProps) {
               ))}
             </div>
           </fieldset>
-
-          {attending === "yes" && (
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs uppercase tracking-[0.2em] text-charcoal/60">
-                Total seats needed
-              </span>
-              <select
-                name="guests"
-                defaultValue="1"
-                className="rounded-xl border border-charcoal/15 bg-white/60 px-4 py-2.5 text-sm outline-none transition focus:border-dusty focus:bg-white"
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((count) => (
-                  <option key={count} value={count}>
-                    {count}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
 
           <label className="flex flex-col gap-1.5">
             <span className="text-xs uppercase tracking-[0.2em] text-charcoal/60">

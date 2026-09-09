@@ -1198,7 +1198,6 @@ function RsvpTab({
   }
 
   const attending = rsvps.filter((entry) => entry.attending === "yes");
-  const seats = attending.reduce((sum, entry) => sum + entry.guests, 0);
 
   return (
     <section className="glass rounded-3xl p-6 sm:p-8">
@@ -1218,9 +1217,6 @@ function RsvpTab({
       <div className="mt-4 flex flex-wrap gap-2.5 text-xs">
         <span className="rounded-full bg-deeprose px-3 py-1 font-medium uppercase tracking-widest text-white">
           {attending.length} accepting
-        </span>
-        <span className="rounded-full bg-charcoal/10 px-3 py-1 uppercase tracking-widest text-charcoal">
-          {seats} {seats === 1 ? "seat" : "seats"}
         </span>
         <span className="rounded-full bg-charcoal/10 px-3 py-1 uppercase tracking-widest text-charcoal">
           {rsvps.length} total
@@ -1252,9 +1248,7 @@ function RsvpTab({
                         : "bg-charcoal/15 text-charcoal"
                     }`}
                   >
-                    {entry.attending === "yes"
-                      ? `Attending · ${entry.guests}`
-                      : "Declined"}
+                    {entry.attending === "yes" ? "Attending" : "Declined"}
                   </span>
                   {entry.hidden && (
                     <span className="rounded-full bg-charcoal/10 px-2 py-0.5 text-[0.6rem] uppercase tracking-widest text-charcoal/60">

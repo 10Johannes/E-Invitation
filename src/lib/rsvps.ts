@@ -5,7 +5,6 @@ export type RsvpEntry = {
   id: string;
   name: string;
   attending: "yes" | "no";
-  guests: number;
   message: string;
   hidden: boolean;
   createdAt: number;
@@ -83,10 +82,6 @@ function normalizeEntry(raw: unknown): RsvpEntry | null {
     id: entry.id,
     name: entry.name.slice(0, 80),
     attending: entry.attending === "no" ? "no" : "yes",
-    guests:
-      typeof entry.guests === "number" && Number.isFinite(entry.guests)
-        ? Math.min(Math.max(Math.round(entry.guests), 1), 12)
-        : 1,
     message: typeof entry.message === "string" ? entry.message.slice(0, 280) : "",
     hidden: Boolean(entry.hidden),
     createdAt:
@@ -122,7 +117,6 @@ async function saveRsvps(entries: RsvpEntry[]): Promise<void> {
 export type NewRsvpInput = {
   name: string;
   attending: "yes" | "no";
-  guests: number;
   message: string;
 };
 
@@ -132,7 +126,6 @@ export async function addRsvp(input: NewRsvpInput): Promise<RsvpEntry> {
     id: crypto.randomUUID(),
     name: input.name.slice(0, 80),
     attending: input.attending,
-    guests: Math.min(Math.max(Math.round(input.guests), 1), 12),
     message: input.message.slice(0, 280),
     hidden: false,
     createdAt: Date.now(),

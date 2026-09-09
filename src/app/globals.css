@@ -423,15 +423,13 @@ section[id] {
   }
 }
 
-/* ---------- QR postcard (A6 landscape) ---------- */
+/* ---------- QR postcard (fills the selected paper) ---------- */
 
-@page postcard {
-  size: 148mm 105mm;
+@page {
   margin: 0;
 }
 
 .postcard {
-  page: postcard;
   width: 148mm;
   height: 105mm;
   -webkit-print-color-adjust: exact;
@@ -445,6 +443,20 @@ section[id] {
 @media print {
   body {
     background: #fff;
+  }
+  .postcard-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+  .postcard {
+    position: fixed;
+    inset: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    border-radius: 0 !important;
+    box-shadow: none !important;
   }
   .postcard-screen {
     box-shadow: none !important;

@@ -58,7 +58,6 @@ export async function POST(request: Request) {
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const attending = body.attending === "no" ? "no" : body.attending === "yes" ? "yes" : "";
   const message = typeof body.message === "string" ? body.message.trim() : "";
-  const guestsRaw = Number(body.guests);
 
   if (!name || name.length > 80) {
     return NextResponse.json(
@@ -72,17 +71,10 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  if (!Number.isFinite(guestsRaw) || guestsRaw < 1 || guestsRaw > 12) {
-    return NextResponse.json(
-      { ok: false, error: "Seats must be between 1 and 12." },
-      { status: 400 }
-    );
-  }
 
   await addRsvp({
     name,
     attending,
-    guests: guestsRaw,
     message,
   });
 

@@ -18,7 +18,6 @@ export async function GET() {
   const header = [
     "name",
     "attending",
-    "guests",
     "message",
     "visible",
     "submitted",
@@ -26,7 +25,6 @@ export async function GET() {
   const rows = rsvps.map((entry) => [
     entry.name,
     entry.attending === "yes" ? "yes" : "no",
-    String(entry.guests),
     entry.message,
     entry.hidden ? "hidden" : "visible",
     new Date(entry.createdAt).toISOString(),
