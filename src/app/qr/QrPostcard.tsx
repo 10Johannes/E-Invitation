@@ -65,7 +65,7 @@ export default function QrPostcard({
       <LeafBranch className="absolute -left-1 -top-1 h-14 w-auto rotate-12 text-wine/20" flip />
       <LeafBranch className="absolute -bottom-1 -right-1 h-14 w-auto -rotate-180 text-wine/20" />
 
-      <div className="relative flex h-full w-full items-center gap-7 px-[11mm]">
+      <div className="relative flex h-full w-full items-center gap-4 px-[6mm] sm:gap-7 sm:px-[11mm]">
         <div className="flex-1">
           <p className="text-[7pt] uppercase tracking-[0.3em] text-wine/75">
             The wedding of
@@ -99,9 +99,9 @@ export default function QrPostcard({
         <div className="-rotate-1 rounded-lg bg-white p-[3mm] shadow-md">
           {qrDataUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={qrDataUrl} alt="QR code linking to the photo upload page" className="block h-[36mm] w-[36mm]" />
+            <img src={qrDataUrl} alt="QR code linking to the photo upload page" className="block h-[26mm] w-[26mm] sm:h-[36mm] sm:w-[36mm]" />
           ) : (
-            <div className="h-[36mm] w-[36mm] animate-pulse rounded bg-black/5" />
+            <div className="h-[26mm] w-[26mm] animate-pulse rounded bg-black/5 sm:h-[36mm] sm:w-[36mm]" />
           )}
           <p className="mt-1 text-center font-serif text-[8pt] italic text-wine/80">
             scan me

@@ -440,6 +440,15 @@ section[id] {
   box-shadow: 0 18px 50px color-mix(in srgb, var(--t-heading) 25%, transparent);
 }
 
+@media (max-width: 640px) {
+  .postcard {
+    width: 100%;
+    max-width: 148mm;
+    height: auto;
+    aspect-ratio: 148 / 105;
+  }
+}
+
 @media print {
   body {
     background: #fff;
